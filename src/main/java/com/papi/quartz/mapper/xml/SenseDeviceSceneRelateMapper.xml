@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.papi.quartz.mapper.SenseDeviceSceneRelateMapper">
+    <resultMap type="com.papi.quartz.bean.SenseDeviceSceneRelate" id="rs_SenseDeviceSceneRelate">
+        <result property="id" column="id" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+        <result property="idFamily" column="id_family" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+        <result property="idGateway" column="id_gateway" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="idDevice" column="id_device" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="sceneJson" column="sceneJson" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="isValid" column="isValid" javaType="java.lang.String" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="listByBean" parameterType= "java.util.Map" resultMap = "rs_SenseDeviceSceneRelate">
+        SELECT 
+            id,id_family,id_gateway,id_device,sceneJson,isValid
+        FROM sense_device_scene_relate
+        WHERE
+        <trim prefixOverrides="and | or">
+            <if test="idFamily != null and idFamily != 0">
+                AND id_family =  #{idFamily}
+            </if>
+            <if test= "idGateway != null">
+                AND id_gateway = #{idGateway}
+            </if>
+            <if test="idDevice != null">
+                AND id_device = #{idDevice}
+                
+            </if>
+        </trim>    
+    </select>
+
+    <insert id="insert" parameterType="com.papi.quartz.bean.SenseDeviceSceneRelate">
+        INSERT INTO sense_device_scene_relate
+        (id_family,id_gateway,id_device,sceneJson,isValid) values
+        (#{idFamily},
+         #{idGateway},
+         #{idDevice},
+         #{sceneJson},
+         #{isValid})
+         <selectKey keyProperty="id" resultType="int" order="AFTER">
+             SELECT LAST_INSERT_ID()
+         </selectKey>
+    </insert>
+    
+    <delete id="deleteById" parameterType="com.papi.quartz.bean.SenseDeviceSceneRelate">
+        DELETE FROM sense_device_scene_relate
+        <where>
+            <if test="id != null and id != 0">
+                id = #{id}
+            </if>
+            <if test="idDevice != null">
+                id_device = #{idDevice}
+            </if>
+        </where>
+    </delete>
+    
+    <update id="update" parameterType="com.papi.quartz.bean.SenseDeviceSceneRelate">
+        UPDATE sense_device_scene_relate 
+        <set>
+            <if test="sceneJson != null" >
+            sceneJson = #{sceneJson},
+            </if>
+            <if test="isValid != null">
+            isValid = #{isValid}
+            </if>
+        </set>
+        WHERE
+        <trim prefixOverrides="and | or">
+            <if test="id != 0">
+            AND id = #{id}
+            </if>
+	        <if test="idFamily != null and idFamily != 0">
+	        AND id_family= #{idFamily}
+	        </if>
+	        <if test="idGateway != null">
+	        AND id_gateway= #{idGateway} 
+	        </if>
+	        <if test="idDevice !=null">
+	        AND id_device= #{idDevice}
+	        </if>	       
+        </trim>
+    </update>
+</mapper>
