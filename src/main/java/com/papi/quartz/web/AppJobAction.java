@@ -129,8 +129,7 @@ public class AppJobAction {
                 	}
             	}            	
         	} //end for
-    	}    	    	
-		
+    	}    	    			
 		
     	//保存关联任务到数据库
     	SenseDeviceSceneRelate senseDeviceSceneRelate = new SenseDeviceSceneRelate();
