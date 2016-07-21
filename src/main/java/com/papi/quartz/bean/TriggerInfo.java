@@ -29,7 +29,7 @@ public class TriggerInfo implements Serializable{
 	  private String intervalTime = "0:0:0:0";//****
 */	  private int repeatCount = -1;   //重复执行次数
 	  private int repeatInterval;//重复执行的间隔
-	  private String repeatIntervalUnit; //重复类型(HOUR,MINUTE,SECOND)
+	  private String repeatIntervalUnit="MINUTE"; //重复类型(HOUR,MINUTE,SECOND)
 	  
 	  private Date cronStartDate;
 	  private Date cronEndDate;

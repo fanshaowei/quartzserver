@@ -595,7 +595,7 @@ public class QuartzServiceImpl implements QuartzService {
 		dailyTimeIntervalScheduleBuilder.startingDailyAt(new TimeOfDay(starHour,starMin,starSec))
 		.endingDailyAt(new TimeOfDay(endHour,endMin,endSec));
 		
-		//dayOfWeek取值：everyDay 或者 SUNDAY、MONDAY、TUESDAY、WEDNESDAY、THURSDAY...（0-6 代表星期天到星期六）
+		//dayOfWeek取值：everyDay 或者 SUN、MON、TUE、WED、THU...（0-6 代表星期天到星期六）
 		String dayOfWeek = triggerInfo.getDayOfWeek()[0];
 		if(dayOfWeek.equals("everyDay")){
 			//每天都重复触发
@@ -610,11 +610,10 @@ public class QuartzServiceImpl implements QuartzService {
 			dailyTimeIntervalScheduleBuilder.onDaysOfTheWeek(dayOfWeekSet);
 		}
 		
-		boolean isRepeatTrigger = triggerInfo.getIsRepeatTrigger();
+		boolean isRepeatTrigger = triggerInfo.getIsRepeatTrigger();		
 		if(isRepeatTrigger){
 			int repeatInterval = new Integer(triggerInfo.getRepeatInterval()).intValue();
 			String repeatIntervalUnit = triggerInfo.getRepeatIntervalUnit();
-			
 			//间隔的单元 HOUR/MINUTE/SECOND
 			dailyTimeIntervalScheduleBuilder.withInterval(repeatInterval, DateBuilder.IntervalUnit.valueOf(repeatIntervalUnit));					
 			
@@ -623,7 +622,11 @@ public class QuartzServiceImpl implements QuartzService {
 				int repeatCount = triggerInfo.getRepeatCount();
 				dailyTimeIntervalScheduleBuilder.withRepeatCount(repeatCount);
 			}
+		}else{
+			int repeatCount = triggerInfo.getRepeatCount();
+			dailyTimeIntervalScheduleBuilder.withRepeatCount(repeatCount);
 		}
+		
 		triggerBuilder.withSchedule(dailyTimeIntervalScheduleBuilder);
 		
 		return (DailyTimeIntervalTrigger) triggerBuilder.build();
