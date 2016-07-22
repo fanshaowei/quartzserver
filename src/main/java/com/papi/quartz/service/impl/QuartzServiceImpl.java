@@ -235,7 +235,7 @@ public class QuartzServiceImpl implements QuartzService {
 		String triggerName = trigger.getKey().getName();
 		String triggerGroup = trigger.getKey().getGroup();
 		String triggerDescription = trigger.getDescription();
-		
+		JobDataMap jobDataMap = trigger.getJobDataMap();
 		Trigger.TriggerState triggerState = null;
 		try {
 		     triggerState = this.scheduler.getTriggerState(trigger.getKey());
@@ -345,7 +345,8 @@ public class QuartzServiceImpl implements QuartzService {
 			triggerInfo.setTriggerGroup(triggerGroup);
 			triggerInfo.setTriggerDescription(triggerDescription);
 			triggerInfo.setCronExpression(cronExpression);						
-			triggerInfo.setTriggerType("CRON_TRIGGER");		
+			triggerInfo.setTriggerType("CRON_TRIGGER");
+			triggerInfo.setJobDataMap(jobDataMap);
 		}
 				
 		return triggerInfo;

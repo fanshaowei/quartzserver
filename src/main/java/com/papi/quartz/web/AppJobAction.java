@@ -586,10 +586,16 @@ public class AppJobAction {
 		triggerInfo.setRepeatInterval(appRequestJobInfo.getRepeatInterval());//***
 		triggerInfo.setRepeatIntervalUnit(appRequestJobInfo.getRepeatIntervalUnit());//***
 		triggerInfo.setDayOfWeek(appRequestJobInfo.getDayOfWeek());//***
-		triggerInfo.setDailyStartTime(appRequestJobInfo.getDailyTimeArray()[0]);
-		triggerInfo.setDailyEndTime(appRequestJobInfo.getDailyTimeArray()[1]);
-		triggerInfo.setStartTimeOfDay(appRequestJobInfo.getTimeOfDayArray()[0]);//***
-		triggerInfo.setEndTimeOfDay(appRequestJobInfo.getTimeOfDayArray()[1]);    	
+		//触发器的有效日期
+		if(appRequestJobInfo.getDailyTimeArray()!=null && appRequestJobInfo.getDailyTimeArray().length>1){
+			triggerInfo.setDailyStartTime(appRequestJobInfo.getDailyTimeArray()[0]);
+			triggerInfo.setDailyEndTime(appRequestJobInfo.getDailyTimeArray()[1]);
+		}
+		//触发器的执行有效时间点/有效见时间段
+		triggerInfo.setStartTimeOfDay(appRequestJobInfo.getTimeOfDayArray()[0]);
+		if(appRequestJobInfo.getTimeOfDayArray().length>1){
+			//triggerInfo.setEndTimeOfDay(appRequestJobInfo.getTimeOfDayArray()[1]);
+		}  	
 		
 		List<? extends Trigger> triggerList = quartzService.getTriggersOfJob(jobName, idFamily);
 		String name = triggerList.get(0).getKey().getName();
