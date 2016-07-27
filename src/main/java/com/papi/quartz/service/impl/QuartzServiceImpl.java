@@ -33,7 +33,6 @@ import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.GroupMatcher;
-import org.quartz.impl.triggers.DailyTimeIntervalTriggerImpl;
 
 import com.papi.quartz.bean.JobInfo;
 import com.papi.quartz.bean.TriggerInfo;

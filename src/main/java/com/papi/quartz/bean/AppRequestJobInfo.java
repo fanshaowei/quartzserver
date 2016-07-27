@@ -36,7 +36,7 @@ public class AppRequestJobInfo implements Serializable {
 	private boolean isRepeatTrigger;
 	private int repeatCount = -1;
 	private int repeatInterval;
-	private String repeatIntervalUnit;
+	private String repeatIntervalUnit="MINUTE";
 
 	private String dailyStartTime = "2000-01-01 00:00:00";// 可加时间也可不加：2000-01-01 00:00:00
 	private String dailyEndTime = "2500-01-01 23:59:59";
