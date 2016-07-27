@@ -50,6 +50,7 @@ public class SenseControlJob extends BasicJob{
 		String sceneUrl = JobActionUrl.SCENE_CONTROL.getUrl(); 
    	    sceneUrl = sceneUrl.replace(":username", username)
 	       .replace(":idScene", sceneId);		
+		System.out.println(sceneUrl);
 		
 		//创建htt客户端
 		CloseableHttpClient httpClient = HttpClients.createDefault();
@@ -61,18 +62,16 @@ public class SenseControlJob extends BasicJob{
 		httpGet.setConfig(requestConfig);
 		//发送请求
 		try {
+			System.out.println("-----QuartzServer调用智能感知系统 情景控制接口---------------------------------");
 			HttpResponse response = httpClient.execute(httpGet);	
 			HttpEntity httpEntity = response.getEntity();
 			if(httpEntity != null){
 	    		   String entityString = EntityUtils.toString(httpEntity);
-	    		   System.out.print("--------------------------------------");
-	    		   System.out.print(entityString);
-	    		   System.out.print("--------------------------------------");	    		   
+	    		   System.out.println("-----QuartzServer调用智能感知系统 情景控制接口  返回信息---------------------------------");
+	    		   System.out.println(entityString);	    		   
 	    	 } 
 		} catch (Exception e) {
-			System.out.print("--------------------------------------");
-			System.out.print("定时任务执行控制情景失败");
-			System.out.print("--------------------------------------");
+			System.out.println("-------------QuartzServer调用智能感知系统 情景控制接口执行异常--------------------------------------");
 			e.printStackTrace();
 		}finally{
 			try {

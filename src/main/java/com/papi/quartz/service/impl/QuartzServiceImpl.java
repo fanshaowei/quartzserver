@@ -235,6 +235,7 @@ public class QuartzServiceImpl implements QuartzService {
 		String triggerName = trigger.getKey().getName();
 		String triggerGroup = trigger.getKey().getGroup();
 		String triggerDescription = trigger.getDescription();
+		JobDataMap jobDataMap = trigger.getJobDataMap();
 		
 		Trigger.TriggerState triggerState = null;
 		try {
@@ -345,7 +346,8 @@ public class QuartzServiceImpl implements QuartzService {
 			triggerInfo.setTriggerGroup(triggerGroup);
 			triggerInfo.setTriggerDescription(triggerDescription);
 			triggerInfo.setCronExpression(cronExpression);						
-			triggerInfo.setTriggerType("CRON_TRIGGER");		
+			triggerInfo.setTriggerType("CRON_TRIGGER");	
+			triggerInfo.setJobDataMap(jobDataMap);
 		}
 				
 		return triggerInfo;
@@ -497,8 +499,8 @@ public class QuartzServiceImpl implements QuartzService {
 		TriggerBuilder<Trigger> triggerBuilder = getTriggerBuilder(jobInfo,triggerInfo);
 		//创建一个SimpleScheduleBuilder(定义了 严格/文字 基于间隔时间表的触发器) 
 		SimpleScheduleBuilder simpleScheduleBuilder = SimpleScheduleBuilder.simpleSchedule()
-				.withMisfireHandlingInstructionIgnoreMisfires()//错过执行时间的就不理
-				.withMisfireHandlingInstructionNextWithExistingCount(); 						
+				.withMisfireHandlingInstructionIgnoreMisfires();//错过执行时间的就不理
+				 						
 		
 		String startDate = triggerInfo.getSimpleStartDateStr();
 		String endDate = triggerInfo.getSimpleEndDateStr();				
@@ -633,8 +635,10 @@ public class QuartzServiceImpl implements QuartzService {
 			}
 		}else{
 			//如果没有重复，则设置隔24小时执行一次
-			dailyTimeIntervalScheduleBuilder.withInterval(24, DateBuilder.IntervalUnit.valueOf("HOUR"));	
-			dailyTimeIntervalScheduleBuilder.startingDailyAt(new TimeOfDay(starHour,starMin,starSec));
+			//dailyTimeIntervalScheduleBuilder.withInterval(24, DateBuilder.IntervalUnit.valueOf("HOUR"));	
+			dailyTimeIntervalScheduleBuilder.startingDailyAt(new TimeOfDay(starHour,starMin,starSec))
+			    .endingDailyAt(new TimeOfDay(endHour,endMin,endSec))
+			    .withInterval(24, DateBuilder.IntervalUnit.valueOf("HOUR"));
 		}				
 						
 		triggerBuilder.withSchedule(dailyTimeIntervalScheduleBuilder);
