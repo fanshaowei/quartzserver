@@ -378,8 +378,9 @@ public class AppJobAction {
     	String jobName =  appRequestJobInfo.getJobName();
     	
     	//获取原来job的dataMap    
-    	JobDataMap jobDataMap_temp = quartzService.getJobDataMap(jobName, idFamily);
-    	String validity_temp = jobDataMap_temp.getString("validity");
+    	JobDataMap jobDataMap_old = quartzService.getJobDataMap(jobName, idFamily);
+    	String validity_old = jobDataMap_old.getString("validity");
+    	String idDevice_old = JSONObject.fromObject(jobDataMap_old.get("sourceScene")).getString("idDevice");
     	
     	//设置要更改的job的新信息
     	JSONObject sourceScene = JSONObject.fromObject(appRequestJobInfo.getSourceScene());
@@ -412,7 +413,7 @@ public class AppJobAction {
     	}
     	
     	//更改触发器(validity取值 everyDay时，为关联任务每天都有效，因此不加触发器去控制关联任务的有效时间段)
-    	if(validity_temp.equals("everyDay")){
+    	if(validity_old.equals("everyDay")){
     		if(validity.equals("custom")){
     			TriggerInfo triggerInfo = new TriggerInfo();        	        	    	
         		triggerInfo.setTriggerGroup(idFamily);
@@ -450,7 +451,7 @@ public class AppJobAction {
     		}
     	}//end if
     	
-    	if(validity_temp.equals("custom")){
+    	if(validity_old.equals("custom")){
     		if(validity.equals("custom")){
     			TriggerInfo triggerInfo = new TriggerInfo();        	        	
     			triggerInfo.setTriggerGroup(idFamily);
@@ -497,11 +498,25 @@ public class AppJobAction {
     		}//end else if
     	}
     	
+    	int idParam = 0;
+    	Map<String,Object> mapParam = new HashMap<String,Object>();
+    	mapParam.put("idFamily", idFamily);
+    	mapParam.put("idDevice", idDevice_old);
+    	try {
+			List<SenseDeviceSceneRelate> senseDeviceSceneRelateList = senseDeviceSceneRelateService.find(mapParam);
+			if(senseDeviceSceneRelateList != null && senseDeviceSceneRelateList.size()>0){
+				idParam = senseDeviceSceneRelateList.get(0).getId();
+			}			
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+    	
 		//更改关联任务状态为1，执行关联
 		SenseDeviceSceneRelate senseDeviceSceneRelate = new SenseDeviceSceneRelate();
+		senseDeviceSceneRelate.setId(idParam);
     	senseDeviceSceneRelate.setIdFamily(Integer.parseInt(idFamily));    	    	
     	senseDeviceSceneRelate.setIdDevice(sourceScene.getString("idDevice"));    	    	    	    	
-    	senseDeviceSceneRelate.setIsValid("1");
+    	senseDeviceSceneRelate.setIsValid("1");    	    
     	
     	JSONObject sceneJson = new JSONObject();
     	sceneJson.accumulate("doScene", doScene);
@@ -634,7 +649,7 @@ public class AppJobAction {
     		JSONObject sourceScene = JSONObject.fromObject(jobDataMap_temp.getString("sourceScene"));
     		Map<String,Object> map = new HashMap<String,Object>();    		
     		map.put("idDevice", sourceScene.getString("idDevice"));
-    		
+    		map.put("idFamily", idFamily);
     		try {
     			List<SenseDeviceSceneRelate> senseDeviceSceneRelates = this.senseDeviceSceneRelateService.find(map);
     			for (SenseDeviceSceneRelate senseDeviceSceneRelate : senseDeviceSceneRelates) {
@@ -686,7 +701,7 @@ public class AppJobAction {
     		JSONObject sourceScene = JSONObject.fromObject(jobDataMap_temp.getString("sourceScene"));
     		Map<String,Object> map = new HashMap<String,Object>();    		
     		map.put("idDevice", sourceScene.getString("idDevice"));
-    		
+    		map.put("idFamily", idFamily);
     		try {
     			List<SenseDeviceSceneRelate> senseDeviceSceneRelates = this.senseDeviceSceneRelateService.find(map);
     			for (SenseDeviceSceneRelate senseDeviceSceneRelate : senseDeviceSceneRelates) {

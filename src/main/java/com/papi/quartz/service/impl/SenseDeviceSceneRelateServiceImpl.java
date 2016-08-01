@@ -38,7 +38,7 @@ public class SenseDeviceSceneRelateServiceImpl implements SenseDeviceSceneRelate
 	@Override
 	public Integer deleteById(SenseDeviceSceneRelate senseDeviceSceneRelate)
 			throws Exception {
-		// TODO Auto-generated method stub
+		
 		return senseDeviceSceneRelateMapper.deleteById(senseDeviceSceneRelate);
 	}
 	

@@ -320,9 +320,21 @@ public class QuartzServiceImpl implements QuartzService {
 			
 			triggerInfo.setTriggerName(triggerName);
 			triggerInfo.setTriggerGroup(triggerGroup);
-			triggerInfo.setTriggerDescription(triggerDescription);						
-			triggerInfo.setStartTimeOfDay(startTimeOfDay.getHour()+ ":" + startTimeOfDay.getMinute() + ":" + startTimeOfDay.getSecond());
-			triggerInfo.setEndTimeOfDay(endTimeOfDay.getHour()+ ":" + endTimeOfDay.getMinute() + ":" + endTimeOfDay.getSecond());
+			triggerInfo.setTriggerDescription(triggerDescription);
+			
+			String hour="";
+			String minute="";
+			String second="";
+			
+			hour = startTimeOfDay.getHour() < 10 ? "0" + String.valueOf(startTimeOfDay.getHour()) : String.valueOf(startTimeOfDay.getHour());
+			minute = startTimeOfDay.getMinute() < 10 ? "0" + String.valueOf(startTimeOfDay.getMinute()) : String.valueOf(startTimeOfDay.getMinute());
+			second = startTimeOfDay.getSecond() < 10 ? "0" + String.valueOf(startTimeOfDay.getSecond()) : String.valueOf(startTimeOfDay.getSecond());			
+			triggerInfo.setStartTimeOfDay(hour + ":" + minute + ":" + second);			
+			
+			hour = endTimeOfDay.getHour() < 10 ? "0" + String.valueOf(endTimeOfDay.getHour()) : String.valueOf(endTimeOfDay.getHour());
+			minute = endTimeOfDay.getMinute() < 10 ? "0" + String.valueOf(endTimeOfDay.getMinute()) : String.valueOf(endTimeOfDay.getMinute());
+			second = endTimeOfDay.getSecond() < 10 ? "0" + String.valueOf(endTimeOfDay.getSecond()) : String.valueOf(endTimeOfDay.getSecond());
+			triggerInfo.setEndTimeOfDay(hour+ ":" + minute + ":" + second);
 			
 			String[] dayOfWeekArr = new String[set.size()];
 			Iterator<Integer> dayOfWeekIterator = set.iterator();
@@ -667,6 +679,8 @@ public class QuartzServiceImpl implements QuartzService {
 			triggerBuilder.usingJobData(jobDataMap);
 		}
 		
+		//withMisfireHandlingInstructionDoNothing:任务错过，不做什么。配合properties参数org.quartz.jobStore.misfireThreshold，
+		//如果任务错过的时间长度大于参数配置，则任务错过后就不会执行。如果错过的时间长度在参数配置内，则会执行错过的任务
 		triggerBuilder.withSchedule(CronScheduleBuilder.cronSchedule(cronExpression).withMisfireHandlingInstructionDoNothing());
 		return (CronTrigger)triggerBuilder.build();		
 	}
@@ -709,29 +723,32 @@ public class QuartzServiceImpl implements QuartzService {
 			SimpleTrigger simpleTrigger = buildSimpleTrigger(jobInfo, triggerInfo);
 			try {
 				this.scheduler.rescheduleJob(tk,simpleTrigger);
+				
+				return true;
 			} catch (SchedulerException e) {
-				e.printStackTrace();
-				return false;
+				e.printStackTrace();			
 			}
 		}else if (triggerType.equals("DAILY_TRIGGER")){
 			DailyTimeIntervalTrigger dailyTimeIntervalTrigger= buildDailyTimeIntervalTrigger(jobInfo, triggerInfo);
 			try {
 				this.scheduler.rescheduleJob(tk, dailyTimeIntervalTrigger);
+				
+				return true;
 			} catch (SchedulerException e) {
-				e.printStackTrace();
-				return false;
+				e.printStackTrace();				
 			}
 		}else if (triggerType.equals("CRON_TRIGGER")){
 			CronTrigger cronTrigger = buildCronTrigger(jobInfo, triggerInfo);
 			try {
 				this.scheduler.rescheduleJob(tk,cronTrigger);
+				
+				return true;
 			} catch (SchedulerException e) {
-				e.printStackTrace();
-				return false;
+				e.printStackTrace();				
 			}
 		}		    					
 		
-		return true;
+		return false;
 	}
 	/**
 	 * 删除触发器

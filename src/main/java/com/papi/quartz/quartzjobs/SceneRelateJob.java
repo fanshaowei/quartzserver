@@ -39,7 +39,6 @@ public class SceneRelateJob extends BasicJob{
 		String idDevice = JSONObject.fromObject(sourceScene).getString("idDevice");
 		
 		String operation = jobExecutionContext.getTrigger().getJobDataMap().getString("operation");
-        //String operation = jobDataMap.getString("operation");//open 或者 close
 		
 		SenseDeviceSceneRelateService senseDeviceSceneRelateService = 
 				(SenseDeviceSceneRelateService) applicationContex.getBean("senseDeviceSceneRelateService");
@@ -47,6 +46,7 @@ public class SceneRelateJob extends BasicJob{
 		Map<String,Object> mapParam = new HashMap<String,Object>();
 		mapParam.put("idFamily", idFamily);
 		mapParam.put("idDevice", idDevice);
+		
 		try {
 			List<SenseDeviceSceneRelate> senseDeviceSceneRelateList = senseDeviceSceneRelateService.find(mapParam);
 			System.out.println(senseDeviceSceneRelateList.toString());

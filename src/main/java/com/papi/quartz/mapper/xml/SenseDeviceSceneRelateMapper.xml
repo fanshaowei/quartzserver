@@ -23,8 +23,7 @@
                 AND id_gateway = #{idGateway}
             </if>
             <if test="idDevice != null">
-                AND id_device = #{idDevice}
-                
+                AND id_device = #{idDevice}                
             </if>
         </trim>    
     </select>
@@ -57,12 +56,15 @@
     <update id="update" parameterType="com.papi.quartz.bean.SenseDeviceSceneRelate">
         UPDATE sense_device_scene_relate 
         <set>
+            <if test="idDevice != null">
+            id_device = #{idDevice},    
+            </if>
             <if test="sceneJson != null" >
             sceneJson = #{sceneJson},
             </if>
             <if test="isValid != null">
             isValid = #{isValid}
-            </if>
+            </if>            
         </set>
         WHERE
         <trim prefixOverrides="and | or">
@@ -74,10 +76,7 @@
 	        </if>
 	        <if test="idGateway != null">
 	        AND id_gateway= #{idGateway} 
-	        </if>
-	        <if test="idDevice !=null">
-	        AND id_device= #{idDevice}
-	        </if>	       
+	        </if>	        	     
         </trim>
     </update>
 </mapper>
