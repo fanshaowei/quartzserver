@@ -15,8 +15,7 @@ import com.papi.quartz.service.SenseDeviceSceneRelateService;
 public class SenseDeviceSceneRelateServiceImpl implements SenseDeviceSceneRelateService{
     @Resource
     SenseDeviceSceneRelateMapper senseDeviceSceneRelateMapper;
-		
-        
+	        
 	@Override
 	public List<SenseDeviceSceneRelate> find(Map<String,Object> map) throws Exception {
 		

@@ -1,6 +1,8 @@
 package com.papi.quartz.service.impl;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -12,6 +14,7 @@ import javax.servlet.ServletContext;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
+import org.apache.log4j.Logger;
 import org.quartz.CronExpression;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.CronTrigger;
@@ -33,6 +36,7 @@ import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.GroupMatcher;
+import org.quartz.impl.triggers.DailyTimeIntervalTriggerImpl;
 
 import com.papi.quartz.bean.JobInfo;
 import com.papi.quartz.bean.TriggerInfo;
@@ -42,10 +46,12 @@ import com.papi.quartz.utils.DateUtils;
 import com.papi.quartz.utils.QuartzUtils;
 
 
-public class QuartzServiceImpl implements QuartzService {    
+public class QuartzServiceImpl implements QuartzService,Serializable {    
 
 	private static final long serialVersionUID = 1L;
     
+	static Logger logger = Logger.getLogger(QuartzServiceImpl.class.getName());
+	
 	private Scheduler scheduler;
 	private JobDetail jobDetail;
 	private JobDataMap jobDataMap;	
@@ -542,7 +548,7 @@ public class QuartzServiceImpl implements QuartzService {
 				triggerBuilder.usingJobData("repeatIntervalUnit", "SECOND");
 				simpleScheduleBuilder.withIntervalInSeconds(repeatInterval);
 			}
-			
+						
 			simpleScheduleBuilder.repeatForever();
 			
 			if(endDate != null){
@@ -567,31 +573,16 @@ public class QuartzServiceImpl implements QuartzService {
 	 * @param triggerInfo
 	 * @return
 	 */
+	@SuppressWarnings("unused")
 	private static DailyTimeIntervalTrigger buildDailyTimeIntervalTrigger(JobInfo jobInfo, TriggerInfo triggerInfo){
 		TriggerBuilder<Trigger> triggerBuilder = getTriggerBuilder(jobInfo,triggerInfo);
-		//DailyTimeIntervalTriggerImpl dailyTrigger = (DailyTimeIntervalTriggerImpl) triggerBuilder.build();
-		//dailyTrigger.
-		
-		DailyTimeIntervalScheduleBuilder dailyTimeIntervalScheduleBuilder = DailyTimeIntervalScheduleBuilder.dailyTimeIntervalSchedule()
-				.withMisfireHandlingInstructionDoNothing();
 		
 		JobDataMap jobDataMap = triggerInfo.getJobDataMap();
 		if(jobDataMap != null){
 			triggerBuilder.usingJobData(jobDataMap);
 		}
 		
-		//触发器有效的时间段
-		String dailyStartTime = triggerInfo.getDailyStartTime();
-		String dailyEndTime = triggerInfo.getDailyEndTime();							
-		
-		if(dailyStartTime != null && dailyStartTime != ""){
-			Date startDate = DateUtils.stringToDate(dailyStartTime,DateUtils.TIME_PATTERN_YMDHMS);
-			triggerBuilder.startAt(startDate);	
-		}
-		if(dailyEndTime != null && dailyEndTime != ""){
-			Date endDate = DateUtils.stringToDate(dailyEndTime,DateUtils.TIME_PATTERN_YMDHMS);
-			triggerBuilder.endAt(endDate);	
-		}				
+		DailyTimeIntervalScheduleBuilder dailyTimeIntervalScheduleBuilder = DailyTimeIntervalScheduleBuilder.dailyTimeIntervalSchedule();
 		
 		//每天的开始时间、结束时间		
 		String startTimeOfDay = triggerInfo.getStartTimeOfDay();
@@ -605,18 +596,32 @@ public class QuartzServiceImpl implements QuartzService {
 		String[] endTimeOfDayArr = endTimeOfDay.split(":");
 		int endHour = Integer.parseInt(endTimeOfDayArr[0]);
 		int endMin = Integer.parseInt(endTimeOfDayArr[1]);
-		int endSec = Integer.parseInt(endTimeOfDayArr[2]);				
-						
-		//设置每天的开始执行时间和结束时间
-		//dailyTimeIntervalScheduleBuilder.startingDailyAt(new TimeOfDay(starHour,starMin,starSec));
-		//.endingDailyAt(new TimeOfDay(endHour,endMin,endSec));
-				
+		int endSec = Integer.parseInt(endTimeOfDayArr[2]);	
+		
+		//触发器有效的时间段
+		/*String dailyStartTime = triggerInfo.getDailyStartTime();
+		String dailyEndTime = triggerInfo.getDailyEndTime();
+		Date startDate = null;
+		Date endDate = null;
+		if(dailyStartTime != null && dailyStartTime != ""){
+			Calendar calendar = Calendar.getInstance();
+			calendar.set(calendar.get(Calendar.YEAR), 
+					calendar.get(Calendar.MONTH), 
+					calendar.get(Calendar.DAY_OF_MONTH), 
+					starHour, starMin, starSec);
+			
+			startDate = DateUtils.dateFormat(calendar.getTime(), DateUtils.TIME_PATTERN_YMDHMS);
+		}
+		if(dailyEndTime != null && dailyEndTime != ""){
+			endDate = DateUtils.stringToDate(dailyEndTime,DateUtils.TIME_PATTERN_YMDHMS);
+		}*/									
+	
 		//设置在哪天执行
 		//dayOfWeek取值：everyDay 或者 SUNDAY、MONDAY、TUESDAY、WEDNESDAY、THURSDAY...（1-7 代表星期天到星期六）
 		String dayOfWeek = triggerInfo.getDayOfWeek()[0];
 		if(dayOfWeek.equals("everyDay")){
 			//每天都重复触发
-			dailyTimeIntervalScheduleBuilder.onEveryDay();
+			dailyTimeIntervalScheduleBuilder = dailyTimeIntervalScheduleBuilder.onEveryDay();
 		}else{
 			//指定的哪一天触发
 			Set<Integer> dayOfWeekSet = new HashSet<Integer>();
@@ -624,32 +629,35 @@ public class QuartzServiceImpl implements QuartzService {
 			for(String i : dayOfWeekArr){ 
 				dayOfWeekSet.add(WeekOfNum.getWeekOfNum(i));
 			}			
-			dailyTimeIntervalScheduleBuilder.onDaysOfTheWeek(dayOfWeekSet);
+			dailyTimeIntervalScheduleBuilder = dailyTimeIntervalScheduleBuilder.onDaysOfTheWeek(dayOfWeekSet);
         }
 				
 		//设置是否重复执行，重复执行的次数和间隔
 		boolean isRepeatTrigger = triggerInfo.getIsRepeatTrigger();
-		if(isRepeatTrigger){
-			dailyTimeIntervalScheduleBuilder.startingDailyAt(new TimeOfDay(starHour,starMin,starSec));
-			//间隔时间大小和间隔的单位
-			int repeatInterval = new Integer(triggerInfo.getRepeatInterval()).intValue();
-			String repeatIntervalUnit = triggerInfo.getRepeatIntervalUnit();
-			
-			//间隔的单元 HOUR/MINUTE/SECOND
-			dailyTimeIntervalScheduleBuilder.withInterval(repeatInterval, DateBuilder.IntervalUnit.valueOf(repeatIntervalUnit));					
-			
-			//如果触发器有指定repeatCount,则次数执行完后会自动删除触发器,repeatCount必须
+		//间隔时间大小和间隔的单位
+		int repeatInterval = triggerInfo.getRepeatInterval();
+		String repeatIntervalUnit = triggerInfo.getRepeatIntervalUnit();
+		
+		if(isRepeatTrigger){																					
+			//如果触发器有指定repeatCount,则次数执行完后会自动删除触发器,改用endingDailyAfterCount
 			if(triggerInfo.getRepeatCount() > 1){
 				int repeatCount = triggerInfo.getRepeatCount();
-				/*dailyTimeIntervalScheduleBuilder.withRepeatCount(repeatCount);*/	
-				dailyTimeIntervalScheduleBuilder.endingDailyAfterCount(repeatCount);	
+				
+				dailyTimeIntervalScheduleBuilder = dailyTimeIntervalScheduleBuilder
+						.startingDailyAt(new TimeOfDay(starHour,starMin,starSec))
+						.withInterval(repeatInterval, DateBuilder.IntervalUnit.valueOf(repeatIntervalUnit))
+						.endingDailyAfterCount(repeatCount);	
+			}else{				
+				dailyTimeIntervalScheduleBuilder = dailyTimeIntervalScheduleBuilder
+						.startingDailyAt(new TimeOfDay(starHour,starMin,starSec))
+						.withInterval(repeatInterval, DateBuilder.IntervalUnit.valueOf(repeatIntervalUnit));	
 			}
 		}else{
 			//如果没有重复，则设置隔24小时执行一次
-			//dailyTimeIntervalScheduleBuilder.withInterval(24, DateBuilder.IntervalUnit.valueOf("HOUR"));	
-			dailyTimeIntervalScheduleBuilder.startingDailyAt(new TimeOfDay(starHour,starMin,starSec))
-			    .endingDailyAt(new TimeOfDay(endHour,endMin,endSec))
-			    .withInterval(24, DateBuilder.IntervalUnit.valueOf("HOUR"));
+			dailyTimeIntervalScheduleBuilder = dailyTimeIntervalScheduleBuilder
+					.startingDailyAt(new TimeOfDay(starHour,starMin,starSec))
+			        .endingDailyAt(new TimeOfDay(endHour,endMin,endSec))
+			        .withInterval(repeatInterval, DateBuilder.IntervalUnit.valueOf(repeatIntervalUnit));
 		}				
 						
 		triggerBuilder.withSchedule(dailyTimeIntervalScheduleBuilder);
@@ -657,6 +665,78 @@ public class QuartzServiceImpl implements QuartzService {
 		return (DailyTimeIntervalTrigger) triggerBuilder.build();
 	}
 	
+	//创建每天间隔触发器另一种方法
+	private static DailyTimeIntervalTrigger buildDailyTimeIntervalTrigger2(JobInfo jobInfo, TriggerInfo triggerInfo){				
+		String triggerName =  triggerInfo.getTriggerName();
+		String triggerGroup = triggerInfo.getTriggerGroup();
+		String triggerDescription = triggerInfo.getTriggerDescription();
+		JobDataMap jobDataMap = triggerInfo.getJobDataMap();
+		
+		String jobName =  jobInfo.getJobName();
+		String jobGroup = jobInfo.getJobGroup();
+		
+		//每天的开始时间、结束时间		
+		String startTimeOfDayStr = triggerInfo.getStartTimeOfDay();
+		String endTimeOfDayStr = triggerInfo.getEndTimeOfDay();
+		
+		String[] startTimeOfDayArr = startTimeOfDayStr.split(":");
+		int starHour = Integer.parseInt(startTimeOfDayArr[0]);
+		int starMin = Integer.parseInt(startTimeOfDayArr[1]);
+		int starSec = Integer.parseInt(startTimeOfDayArr[2]);
+		
+		String[] endTimeOfDayArr = endTimeOfDayStr.split(":");
+		int endHour = Integer.parseInt(endTimeOfDayArr[0]);
+		int endMin = Integer.parseInt(endTimeOfDayArr[1]);
+		int endSec = Integer.parseInt(endTimeOfDayArr[2]);
+		
+		//有效时日期
+		String dailyStartTime = triggerInfo.getDailyStartTime();
+		String dailyEndTime = triggerInfo.getDailyEndTime();
+		Date startDate = null;
+		Date endDate = null;
+		if(dailyStartTime != null && dailyStartTime != ""){
+			Calendar calendar = Calendar.getInstance();
+			calendar.set(calendar.get(Calendar.YEAR), 
+					calendar.get(Calendar.MONTH), 
+					calendar.get(Calendar.DAY_OF_MONTH), 
+					starHour, starMin, starSec);
+			
+			startDate = DateUtils.dateFormat(calendar.getTime(), DateUtils.TIME_PATTERN_YMDHMS);	
+		}
+		if(dailyEndTime != null && dailyEndTime != ""){
+			endDate = DateUtils.stringToDate(dailyEndTime,DateUtils.TIME_PATTERN_YMDHMS);
+		}	
+						
+		//重复间隔，重复单位
+		int repeatInterval = triggerInfo.getRepeatInterval();
+		String intervalUnit = triggerInfo.getRepeatIntervalUnit();
+		
+		//设置week
+		String dayOfWeek = triggerInfo.getDayOfWeek()[0];
+		Set<Integer> dayOfWeekSet = new HashSet<Integer>();
+		if(dayOfWeek.equals("everyDay")){
+			//每天都重复触发
+		    dayOfWeek = "1,2,3,4,5,6,7";
+		}
+				
+		String[] dayOfWeekArr = dayOfWeek.split(",");			
+		for(String i : dayOfWeekArr){ 
+			dayOfWeekSet.add(WeekOfNum.getWeekOfNum(i));
+		}        
+		
+		//创建触发器
+		DailyTimeIntervalTriggerImpl dailyTimeIntervalTriggerImpl = 
+				new DailyTimeIntervalTriggerImpl(triggerName, triggerGroup, jobName, jobGroup, 
+						startDate, endDate, 
+						new TimeOfDay(starHour,starMin,starSec), new TimeOfDay(endHour,endMin,endSec), 
+						DateBuilder.IntervalUnit.valueOf(intervalUnit), repeatInterval);
+		
+		dailyTimeIntervalTriggerImpl.setDaysOfWeek(dayOfWeekSet);
+		dailyTimeIntervalTriggerImpl.setJobDataMap(jobDataMap);
+		dailyTimeIntervalTriggerImpl.setDescription(triggerDescription);
+		
+		return dailyTimeIntervalTriggerImpl;
+	}
 	
 	/**
 	 * 创建cron触发器
@@ -672,6 +752,7 @@ public class QuartzServiceImpl implements QuartzService {
 		
 		boolean b = CronExpression.isValidExpression(cronExpression);
 		if(!b){
+			logger.info("CRON表达式 = " + cronExpression + "不正确，过不了校验");
 			return null;
 		}
 		
@@ -697,7 +778,7 @@ public class QuartzServiceImpl implements QuartzService {
 		String triggerDescription = triggerInfo.getTriggerDescription();
 		
 		String jobName =  jobInfo.getJobName();
-		String jobGroup = jobInfo.getJobGroup();
+		String jobGroup = jobInfo.getJobGroup();						
 		
 		TriggerBuilder<Trigger> triggerBuilder = TriggerBuilder.newTrigger()
 			.withIdentity(triggerName, triggerGroup)

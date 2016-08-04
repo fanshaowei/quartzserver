@@ -35,13 +35,13 @@ public class AppRequestJobInfo implements Serializable {
 	private String[] simpletDateArray;
 	private boolean isRepeatTrigger;
 	private int repeatCount = -1;
-	private int repeatInterval;
-	private String repeatIntervalUnit="MINUTE";
+	private int repeatInterval = 24;
+	private String repeatIntervalUnit="HOUR";
 
 	private String dailyStartTime = "2000-01-01 00:00:00";// 可加时间也可不加：2000-01-01 00:00:00
 	private String dailyEndTime = "2500-01-01 23:59:59";
 	private String dailyTimeArray[];
-	private String[] timeOfDayArray;
+	private String[] timeOfDayArray = {"00:00:00","23:59:59"};
 	private String[] dayOfWeek;
 
 	public String getIdFamily() {

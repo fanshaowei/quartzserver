@@ -134,7 +134,7 @@ public class AppJobAction {
     	//保存关联任务到数据库
     	SenseDeviceSceneRelate senseDeviceSceneRelate = new SenseDeviceSceneRelate();
     	senseDeviceSceneRelate.setIdFamily(Integer.parseInt(idFamily));
-    	//senseDeviceSceneRelate.setIdGateway(sourceScene.);
+    	senseDeviceSceneRelate.setJobName(jobName);
     	senseDeviceSceneRelate.setIdDevice(sourceScene.getString("idDevice"));
     	
     	JSONObject sceneJson = new JSONObject();
@@ -502,6 +502,7 @@ public class AppJobAction {
     	Map<String,Object> mapParam = new HashMap<String,Object>();
     	mapParam.put("idFamily", idFamily);
     	mapParam.put("idDevice", idDevice_old);
+    	mapParam.put("jobName", jobName);
     	try {
 			List<SenseDeviceSceneRelate> senseDeviceSceneRelateList = senseDeviceSceneRelateService.find(mapParam);
 			if(senseDeviceSceneRelateList != null && senseDeviceSceneRelateList.size()>0){
@@ -743,11 +744,13 @@ public class AppJobAction {
     	//获取原来job的dataMap       	
     	JobDataMap jobDataMap_temp = quartzService.getJobDataMap(jobName, idFamily);
     	String jobType = jobDataMap_temp.getString("jobType");
+    	
     	//当删除任务类型为自定义时在关联表中删除
     	if(jobType.equals("SceneRelateJob")){
     		SenseDeviceSceneRelate senseDeviceSceneRelate = new SenseDeviceSceneRelate();
 			JSONObject sourceScene = JSONObject.fromObject(jobDataMap_temp.getString("sourceScene"));
 			senseDeviceSceneRelate.setIdDevice(sourceScene.getString("idDevice"));
+			senseDeviceSceneRelate.setJobName(jobName);
     		try {	
     			this.senseDeviceSceneRelateService.deleteById(senseDeviceSceneRelate);
     		} catch (Exception e) {
