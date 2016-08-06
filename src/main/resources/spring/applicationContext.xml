@@ -14,8 +14,13 @@
 		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.2.xsd
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd">
      
-    <context:property-placeholder location="classpath:jdbc.properties,classpath:redis.properties"/>			
+    <context:property-placeholder location="classpath:jdbc.properties,classpath:redis.properties,classpath:quartzServerConfig.properties"/>			
 	
+	<!-- 加载自定的配置 -->
+	<bean id="quartzServerConfig" class = "com.papi.quartz.commons.QuartzServerConfig">
+	    <property name="smarthomeSenseUrl" value="${SmarthomeSense.url}"></property>
+	</bean>
+			
 	<!--配置数据源  -->
 	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
          <property name="user" value="${jdbc.username}"></property>

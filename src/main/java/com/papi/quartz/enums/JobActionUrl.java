@@ -1,7 +1,7 @@
 package com.papi.quartz.enums;
 
 public enum JobActionUrl {
-    SCENE_CONTROL("http://127.0.0.1:9802/SmarthomeSense/dailyTriggerScene?username=:username&idScene=:idScene");
+    SCENE_CONTROL("/dailyTriggerScene?username=:username&idScene=:idScene");
     
     private String url;
     private JobActionUrl(String url){

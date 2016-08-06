@@ -16,7 +16,10 @@ import org.apache.log4j.Logger;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.SchedulerException;
+import org.springframework.context.ApplicationContext;
 
+import com.papi.quartz.commons.QuartzServerConfig;
 import com.papi.quartz.enums.JobActionUrl;
 import com.papi.quartz.utils.DateUtils;
 
@@ -33,6 +36,19 @@ public class SenseControlJob extends BasicJob{
 	public void execute(JobExecutionContext jobExecutionContext)
 			throws JobExecutionException {
 		logger.info("-------------------SenseControlJob Begin-------------------------------");
+		
+		ApplicationContext applicationContex = null;
+		String smarthomeSenseUrl = "";
+		try {
+			 applicationContex = 
+					(ApplicationContext) jobExecutionContext.getScheduler().getContext().get("applicationContextSchedulerContextKey");
+			 QuartzServerConfig quartzServerConfig = (QuartzServerConfig) applicationContex.getBean("quartzServerConfig");
+			 
+			 //获取配置 调用接口的项目路径
+			 smarthomeSenseUrl = quartzServerConfig.getSmarthomeSenseUrl();
+		} catch (SchedulerException e) {		
+			e.printStackTrace();
+		}
 		
 		JobDataMap jobDataMap = jobExecutionContext.getJobDetail().getJobDataMap();
 		
@@ -52,7 +68,7 @@ public class SenseControlJob extends BasicJob{
 		String sceneId = doSceneJSONArray.getJSONObject(0).getString("sceneId");
 		
 		//设置执行url地址
-		String sceneUrl = JobActionUrl.SCENE_CONTROL.getUrl(); 
+		String sceneUrl = smarthomeSenseUrl + JobActionUrl.SCENE_CONTROL.getUrl(); 
    	    sceneUrl = sceneUrl.replace(":username", username)
 	       .replace(":idScene", sceneId);		
 		System.out.println(sceneUrl);
