@@ -70,7 +70,12 @@ public class SceneRelateJob extends BasicJob{
 					}
 				}//end while
 			}
-		} catch (Exception e) {		
+			
+			jobDataMap.put("jobResult", "执行成功");
+			logger.info("执行成功。。。");
+		} catch (Exception e) {
+			jobDataMap.put("jobResult", "执行失败");
+			logger.info("执行失败。。。");
 			e.printStackTrace();
 		}   		
 	

@@ -573,7 +573,6 @@ public class QuartzServiceImpl implements QuartzService,Serializable {
 	 * @param triggerInfo
 	 * @return
 	 */
-	@SuppressWarnings("unused")
 	private static DailyTimeIntervalTrigger buildDailyTimeIntervalTrigger(JobInfo jobInfo, TriggerInfo triggerInfo){
 		TriggerBuilder<Trigger> triggerBuilder = getTriggerBuilder(jobInfo,triggerInfo);
 		
@@ -666,6 +665,7 @@ public class QuartzServiceImpl implements QuartzService,Serializable {
 	}
 	
 	//创建每天间隔触发器另一种方法
+	@SuppressWarnings("unused")
 	private static DailyTimeIntervalTrigger buildDailyTimeIntervalTrigger2(JobInfo jobInfo, TriggerInfo triggerInfo){				
 		String triggerName =  triggerInfo.getTriggerName();
 		String triggerGroup = triggerInfo.getTriggerGroup();

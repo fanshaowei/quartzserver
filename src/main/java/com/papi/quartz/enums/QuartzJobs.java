@@ -15,6 +15,15 @@ public enum QuartzJobs {
 	public void setClazz(String clazz) {
 		this.clazz = clazz;
 	}
-    
+    public static String getJobType(String clazz){
+    	QuartzJobs[] quartzJobs = QuartzJobs.values();
+    	String jobType = "";
+    	for(QuartzJobs qj: quartzJobs){
+    		if(clazz.equals(qj.getClazz())){
+    			jobType = qj.name();
+    		}
+    	}
+    	return jobType;
+    }
     
 }

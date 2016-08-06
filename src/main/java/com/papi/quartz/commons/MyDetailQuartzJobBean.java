@@ -11,6 +11,7 @@ import org.quartz.SchedulerException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
+//暂时没用到
 public class MyDetailQuartzJobBean extends QuartzJobBean{
 	protected final Log logger = LogFactory.getLog(getClass());
 	

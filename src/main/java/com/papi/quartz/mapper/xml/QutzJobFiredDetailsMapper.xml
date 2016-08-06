@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.papi.quartz.mapper.QutzJobFiredDetailsMapper">
+    <resultMap type="com.papi.quartz.bean.QutzJobFiredDetails" id="rs_QutzJobFiredDetails">
+        <result property="id" column="id" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+        <result property="jobName" column="jobName" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="jobGroup" column="jobGroup" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="triggerName" column="triggerName" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="triggerGroup" column="triggerGroup" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="jobType" column="jobType" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="jobStatus" column="jobStatus" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        
+        <result property="startDate" column="startDate" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+        <result property="endDate" column="endDate" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+        <result property="fireDate" column="fireDate" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+        <result property="nextFireDate" column="nextFireDate" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+        			
+        <result property="triggerType" column="triggerType" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="firedResult" column="firedResult" javaType="java.lang.String" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="find" parameterType= "java.util.Map" resultMap = "rs_QutzJobFiredDetails">
+        SELECT 
+            id,jobName,jobGroup,triggerName,triggerGroup,jobType,jobStatus,startDate,endDate,fireDate,nextFireDate,
+            triggerType,firedResult
+        FROM qrtz_job_fired_details
+        WHERE
+        <trim prefixOverrides="and | or">
+            <if test="jobName != null">
+                AND jobName = #{jobName}
+            </if>
+            <if test="jobGroup != null">
+                AND jobGroup =  #{jobGroup}
+            </if>
+            <if test="triggerName != null">
+                AND triggerName = #{triggerName}
+            </if>           
+            <if test="triggerGroup != null">
+                AND triggerGroup = #{triggerGroup}
+            </if>
+            <if test="jobStatus != null">
+                AND jobStatus = #{jobStatus}
+            </if>
+            <if test="fireDate != null">
+                AND fireDate = #{fireDate}
+            </if>
+        </trim>    
+    </select>
+
+    <insert id="insert" parameterType="com.papi.quartz.bean.QutzJobFiredDetails">
+        INSERT INTO qrtz_job_fired_details
+        (jobName,jobGroup,triggerName,triggerGroup,jobType,jobStatus,startDate,endDate,fireDate,nextFireDate,triggerType,firedResult) 
+        values
+        (#{jobName},
+         #{jobGroup},         
+         #{triggerName},
+         #{triggerGroup},
+         #{jobType},         
+         #{jobStatus},
+         #{startDate},
+         #{endDate},
+         #{fireDate},
+         #{nextFireDate},
+         #{triggerType},
+         #{firedResult})
+         <selectKey keyProperty="id" resultType="int" order="AFTER">
+             SELECT LAST_INSERT_ID()
+         </selectKey>
+    </insert>
+    
+    <delete id="delete" parameterType="java.util.Map">
+        DELETE FROM qrtz_job_fired_details
+        WHERE
+        <trim prefixOverrides="and | or">
+            <if test="jobName != null">
+                AND jobName=#{jobName}
+            </if>            
+        </trim>
+    </delete>
+    
+    <update id="update" parameterType="com.papi.quartz.bean.QutzJobFiredDetails">
+        UPDATE qrtz_job_fired_details 
+        <set>
+            <if test="jobStatus != null">
+            jobStatus = #{jobStatus},    
+            </if>
+            <if test="nextFireDate != null" >
+            nextFireDate = #{nextFireDate},
+            </if>
+            <if test="endDate != null">
+            endDate = #{endDate},
+            </if>
+            <if test="firedResult != null">
+            firedResult = #{firedResult}
+            </if>            
+        </set>
+        WHERE
+        <trim prefixOverrides="and | or">  
+            <if test="id != 0">
+            AND id = #{id}
+            </if>         
+            <if test="jobName != null">
+            AND jobName=#{jobName}
+            </if>	        	     
+        </trim>
+    </update>
+</mapper>

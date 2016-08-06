@@ -12,6 +12,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.apache.log4j.Logger;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -25,12 +26,16 @@ import com.papi.quartz.utils.DateUtils;
  *
  */
 public class SenseControlJob extends BasicJob{
-
+	private Logger logger = Logger.getLogger(SenseControlJob.class.getName());
+	
 	@SuppressWarnings("unused")
 	@Override
 	public void execute(JobExecutionContext jobExecutionContext)
-			throws JobExecutionException {			
-					
+			throws JobExecutionException {
+		logger.info("-------------------SenseControlJob Begin-------------------------------");
+		
+		JobDataMap jobDataMap = jobExecutionContext.getJobDetail().getJobDataMap();
+		
 		String date = DateUtils.dateToString(new Date(), DateUtils.TIME_PATTERN_YMDHMS);
 		//获取job相关信息
 		String jobName = jobExecutionContext.getJobDetail().getKey().getName();
@@ -62,17 +67,24 @@ public class SenseControlJob extends BasicJob{
 		httpGet.setConfig(requestConfig);
 		//发送请求
 		try {
-			System.out.println("-----QuartzServer调用智能感知系统 情景控制接口---------------------------------");
+			System.out.println("QuartzServer调用智能感知系统 情景控制接口....");
 			HttpResponse response = httpClient.execute(httpGet);	
 			HttpEntity httpEntity = response.getEntity();
 			if(httpEntity != null){
 	    		   String entityString = EntityUtils.toString(httpEntity);
-	    		   System.out.println("-----QuartzServer调用智能感知系统 情景控制接口  返回信息---------------------------------");
+	    		   
+	    		   logger.info("QuartzServer调用智能感知系统 情景控制接口  返回信息....");
 	    		   System.out.println(entityString);	    		   
 	    	 } 
+			
+			jobDataMap.put("jobResult", "执行成功");
+			logger.info("执行成功....");
 		} catch (Exception e) {
-			System.out.println("-------------QuartzServer调用智能感知系统 情景控制接口执行异常--------------------------------------");
+			
+			jobDataMap.put("jobResult", "执行失败");
+			logger.info("QuartzServer调用智能感知系统 情景控制接口执行异常....");
 			e.printStackTrace();
+			
 		}finally{
 			try {
 				httpClient.close();
@@ -80,6 +92,8 @@ public class SenseControlJob extends BasicJob{
 				e.printStackTrace();
 			}
 		}
+		
+		logger.info("-------------------SenseControlJob End-------------------------------");
 	}
     
 }
