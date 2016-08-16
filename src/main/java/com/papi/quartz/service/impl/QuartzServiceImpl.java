@@ -97,7 +97,10 @@ public class QuartzServiceImpl implements QuartzService,Serializable {
 					.storeDurably(true)//新加的任务没有指定触发器，需要设置该属性为ture，不然会被销毁
 					.build();
 			//将任务需要交互的信息放到jobDataMap,在job执行executor时，可获取相关的信息
-			this.jobDetail.getJobDataMap().putAll(this.jobDataMap);
+			if(this.jobDataMap != null){
+				this.jobDetail.getJobDataMap().putAll(this.jobDataMap);	
+			}
+			
 			//将任务加到调度器
 			this.scheduler.addJob(this.jobDetail, true);
 			
@@ -141,6 +144,50 @@ public class QuartzServiceImpl implements QuartzService,Serializable {
 		}
 		
 		return jobInfoList;
+	}
+	
+	//获取所有任务的详细信息
+	@Override
+	public List<JobInfo> getAllJobDetails(){
+		List<JobInfo> allJobInfoList = new ArrayList<JobInfo>();		
+		List<? extends Trigger> triggerList = null;
+		
+		try {
+			List<String> allJobGroupNamesList = this.scheduler.getJobGroupNames();
+			Iterator<String> jobGroupIterator = allJobGroupNamesList.iterator();
+			while(jobGroupIterator.hasNext()){
+				String jobGroupName = jobGroupIterator.next();
+				Set<JobKey> jobKeySet = this.scheduler.getJobKeys(GroupMatcher.jobGroupContains(jobGroupName));
+				Iterator<JobKey> jobKeyIterator = jobKeySet.iterator();
+				while(jobKeyIterator.hasNext()){
+					//获取jobKey
+					JobKey jobKey = jobKeyIterator.next();
+					
+					String jobGroup = jobKey.getGroup();
+					String jobName = jobKey.getName();										
+					
+					JobDetail jobDetail = this.scheduler.getJobDetail(jobKey);
+					String jobClassName =jobDetail.getJobClass().getName();
+					String jobDescription = jobDetail.getDescription();
+					
+					JobInfo jobInfo = new JobInfo();
+					jobInfo.setJobGroup(jobGroup);
+					jobInfo.setJobName(jobName);
+					jobInfo.setJobClassName(jobClassName);
+					jobInfo.setJobDescription(jobDescription);
+										
+					triggerList = this.scheduler.getTriggersOfJob(jobKey);					
+					String state = QuartzUtils.getJobStatus(triggerList, jobKey, this.scheduler);
+					jobInfo.setStatus(state);
+					
+					allJobInfoList.add(jobInfo);
+				}
+			}
+		} catch (SchedulerException e) {			
+			e.printStackTrace();
+		}
+		
+		return allJobInfoList;
 	}
 	
 	/**
@@ -208,7 +255,7 @@ public class QuartzServiceImpl implements QuartzService,Serializable {
 			jobInfo.getJobDataMap().put("doScene", JSONArray.fromObject(jobInfo.getJobDataMap().getString("doScene")));
 			jobInfo.getJobDataMap().put("sourceScene", JSONObject.fromObject(jobInfo.getJobDataMap().getString("sourceScene")));
 						
-			jobInfo.setJobClassName(jobDetail.getJobClass().toString());
+			jobInfo.setJobClassName(jobDetail.getJobClass().getName());
 			
 			List<? extends Trigger> triggerList = null;
 			try {

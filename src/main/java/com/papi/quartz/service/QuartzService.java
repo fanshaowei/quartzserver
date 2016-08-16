@@ -16,6 +16,8 @@ public abstract interface QuartzService {
     
     public abstract List<JobInfo> getAllJobs();
     
+    public List<JobInfo> getAllJobDetails();
+    
     public abstract List<JobInfo> getJobsByGroupName(String groupName);
     
     public abstract boolean deleteJob(JobInfo jobInfo);

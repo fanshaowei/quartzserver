@@ -351,9 +351,11 @@ public class AppJobAction {
     	List<JobInfo> jobInfoList = quartzService.getJobsByGroupName(idFamily);
     	List<JobInfo> returnJobInfoList = new ArrayList<JobInfo>();
     	for(JobInfo jobInfo : jobInfoList){
-    		if(jobInfo.getJobDataMap().getString("jobType").equals(jobType)){
-    			returnJobInfoList.add(jobInfo);
-    		}
+    		if(jobInfo.getJobDataMap().containsKey("jobType")){
+	    		if(jobInfo.getJobDataMap().getString("jobType").equals(jobType)){
+	    			returnJobInfoList.add(jobInfo);
+	    		}
+    		}	
     	}    	 	
     	
     	return returnJobInfoList;

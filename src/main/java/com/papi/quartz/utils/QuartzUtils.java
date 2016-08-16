@@ -1,5 +1,6 @@
 package com.papi.quartz.utils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.quartz.JobKey;
@@ -22,24 +23,28 @@ public class QuartzUtils {
 	public static String getJobStatus(List<? extends Trigger> triggerList,JobKey jobKey,Scheduler scheduler){
 		String state = "正常";
 		
-		if(triggerList.size() == 0)
+		if(triggerList.size() == 0){
 			return "无触发器";
+		}			
 		
-		for(Trigger trigger: triggerList){
+		List<String> stateList = new ArrayList<String>();
+		for(int i = 0; i<triggerList.size(); i++){
+			 Trigger trigger =  triggerList.get(i);
 			 TriggerKey triggerKey = trigger.getKey();
+			 
 			 try {
 				TriggerState triggerState = scheduler.getTriggerState(triggerKey);
-				if(triggerState.equals(TriggerState.PAUSED)){
-					state = "暂停";
-					
-					if(state.endsWith("暂停"))
-						scheduler.pauseJob(jobKey);
-					
-					return state;
-				}
+				stateList.add(triggerState.toString());
+				
 			} catch (SchedulerException e) {				
 				e.printStackTrace();
 			}
+		}
+		
+		if(stateList.contains("NORMAL")){
+			return state;
+		}else{
+			state = "暂停";
 		}
 		
 		return state;

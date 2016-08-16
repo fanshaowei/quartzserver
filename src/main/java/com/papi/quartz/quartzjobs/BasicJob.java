@@ -11,6 +11,8 @@ import org.quartz.PersistJobDataAfterExecution;
 public abstract class BasicJob implements Job {
 	public void execute(JobExecutionContext jobExecutionContext)
 			throws JobExecutionException {
-				
+		String jobName = jobExecutionContext.getJobDetail().getKey().getName();
+		String jobGroup = jobExecutionContext.getJobDetail().getKey().getGroup();
+		System.out.println("执行任务" + "任务组："+ jobGroup + ",任务名："+ jobName );		
 	}
 }

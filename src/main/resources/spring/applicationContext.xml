@@ -23,19 +23,20 @@
 			
 	<!--配置数据源  -->
 	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
-         <property name="user" value="${jdbc.username}"></property>
-         <property name="password" value="${jdbc.password}"></property>
-         <property name="driverClass" value="${jdbc.driver}"></property>
-         <property name="jdbcUrl" value="${jdbc.url}"></property>
-         <property name="minPoolSize" value="${jdbc.minPoolSize}"></property>
-         <property name="maxPoolSize" value="${jdbc.maxPoolSize}"></property>
-         <property name="initialPoolSize" value="${jdbc.initialPoolSize}"></property>
-         <!-- <property name="maxIdleTime" value="${jdbc.maxIdleTime}"></property> -->
-         <!-- <property name="automaticTestTable" value="${jdbc.automaticTestTable}"></property> -->
-         <!-- <property name="preferredTestQuery" value="${jdbc.preferredTestQuery}"></property> -->
-         <property name="idleConnectionTestPeriod" value="${jdbc.idleConnectionTestPeriod}"></property>
-         <property name="acquireIncrement" value="${jdbc.acquireIncrement}"></property>
-         <property name="acquireRetryAttempts" value="${jdbc.acquireRetryAttempts}"></property>            
+        <property name="user" value="${jdbc.username}"></property>
+        <property name="password" value="${jdbc.password}"></property>
+        <property name="driverClass" value="${jdbc.driver}"></property>
+        <property name="jdbcUrl" value="${jdbc.url}"></property>
+        <property name="minPoolSize" value="${jdbc.minPoolSize}"></property>
+        <property name="maxPoolSize" value="${jdbc.maxPoolSize}"></property>
+        <property name="initialPoolSize" value="${jdbc.initialPoolSize}"></property>
+        <property name="maxIdleTime" value="${jdbc.maxIdleTime}"></property>
+        <property name="idleConnectionTestPeriod" value="${jdbc.idleConnectionTestPeriod}"></property>
+        <property name="acquireIncrement" value="${jdbc.acquireIncrement}"></property>
+        <property name="acquireRetryAttempts" value="${jdbc.acquireRetryAttempts}"></property>
+        <property name="acquireRetryDelay" value="${jdbc.acquireRetryDelay}"></property>
+        <property name="preferredTestQuery" value="${jdbc.preferredTestQuery}"></property> 
+        <property name="testConnectionOnCheckin" value="${jdbc.testConnectionOnCheckin}"></property>                             
     </bean>
     
     <!-- 配置Jdbc模板 -->
