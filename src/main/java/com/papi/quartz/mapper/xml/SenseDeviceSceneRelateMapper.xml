@@ -20,7 +20,7 @@
             <if test="jobName != null">
                 AND jobName = #{jobName}
             </if>
-            <if test="idFamily != null and idFamily != 0">
+            <if test="idFamily != null ">
                 AND id_family =  #{idFamily}
             </if>
             <if test= "idGateway != null">
@@ -34,8 +34,9 @@
 
     <insert id="insert" parameterType="com.papi.quartz.bean.SenseDeviceSceneRelate">
         INSERT INTO sense_device_scene_relate
-        (id_family,jobName,id_device,sceneJson,isValid) values
+        (id_family,id_gateway,jobName,id_device,sceneJson,isValid) values
         (#{idFamily},
+         #{idGateway},
          #{jobName},         
          #{idDevice},
          #{sceneJson},
@@ -49,7 +50,7 @@
         DELETE FROM sense_device_scene_relate
         WHERE
         <trim prefixOverrides="and | or">
-            <if test="id != null and id != 0">
+            <if test="id != null">
                 AND id = #{id}
             </if>
             <if test="jobName != null">
@@ -76,7 +77,7 @@
         </set>
         WHERE
         <trim prefixOverrides="and | or">
-            <if test="id != null and id != 0">
+            <if test="id != null">
             AND id = #{id}
             </if>
             <if test="jobName != null">

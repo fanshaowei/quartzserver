@@ -16,6 +16,7 @@ public class AppRequestJobInfo implements Serializable {
 	 */
 	private static final long serialVersionUID = -7092479545958787696L;
 
+	private String idGateway;
 	private String idFamily;
 	private String req_token;
 	private String userName;
@@ -43,6 +44,15 @@ public class AppRequestJobInfo implements Serializable {
 	private String dailyTimeArray[];
 	private String[] timeOfDayArray = {"00:00:00","23:59:59"};
 	private String[] dayOfWeek;
+
+	
+	public String getIdGateway() {
+		return idGateway;
+	}
+
+	public void setIdGateway(String idGateway) {
+		this.idGateway = idGateway;
+	}
 
 	public String getIdFamily() {
 		return idFamily;

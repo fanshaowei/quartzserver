@@ -45,7 +45,9 @@ public class TriggerInfo implements Serializable{
 /*	  private String dailyIntervalTime;*/
 	  private String[] dayOfWeek = {"everyDay"};	  	
 	  
-	 	  
+	  private String nextFireTime;
+	  private String previousFireTime;
+	  
 	public String getTriggerType() {
 		return triggerType;
 	}
@@ -237,6 +239,22 @@ public class TriggerInfo implements Serializable{
 
 	public void setJobDataMap(JobDataMap jobDataMap) {
 		this.jobDataMap = jobDataMap;
+	}
+
+	public String getNextFireTime() {
+		return nextFireTime;
+	}
+
+	public void setNextFireTime(String nextFireTime) {
+		this.nextFireTime = nextFireTime;
+	}
+
+	public String getPreviousFireTime() {
+		return previousFireTime;
+	}
+
+	public void setPreviousFireTime(String previousFireTime) {
+		this.previousFireTime = previousFireTime;
 	} 
 	  	
 }

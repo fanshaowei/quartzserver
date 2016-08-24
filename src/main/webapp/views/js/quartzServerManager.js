@@ -9,7 +9,7 @@ $(document).ready(function(){
 	quartzServerManager.getSelectData();
 	quartzServerManager.getCheckData();
 	
-	quartzServerManager.listenTriggerType();
+	quartzServerManager.listenTriggerType("add");
 	quartzServerManager.onClickEvent();
 	
 })
@@ -59,155 +59,121 @@ quartzServerManager.initDataGrid = function(){
 			handler: function(){
 				quartzServerManager.resumeJobs();
 			}
+		},'-',{
+			iconCls: "icon-recordlist",
+			text:"查看任务执行日志",
+			handler: function(){
+				quartzServerManager.getJobLogs();
+			}
 		}],
 		method:"get",
 		url: top.Client.CONST_PATH + "/quartzServerManager/getAllJobDetails",
-		loadMsg:'loading...'
+		loadMsg:'数据加载中...'
 	});
 	 		
 }
 
-//获取选中的数据
-quartzServerManager.getSelectData = function(){
-	$("#task-list").datagrid({
-		onSelect : function (index, row){
-			var rowStr = JSON.stringify(row);			
-			var nums = $.inArray(rowStr,quartzServerManager.selectRowData);
-            if(nums == -1)
-			    quartzServerManager.selectRowData.push(rowStr);	
-            
-            console.log( quartzServerManager.selectRowData);
-												
-		},
-		onUnselect: function(index, row){
-			var rowStr = JSON.stringify(row);
-			var nums = $.inArray(rowStr,quartzServerManager.selectRowData);
-			if(nums > -1)
-				quartzServerManager.selectRowData.splice(nums,1);		
-		}
+//初始化表单元素
+quartzServerManager.initFormElements = function(){
+	$("#jobGroup,#jobName").textbox('setValue',"");
+	$("#jobDescription").val("");
+	
+	$('#triggerType').combobox({		
+		editable:false
 	});
+	$('#triggerType').combobox('setValue','SIMPLE_TRIGGER');
+	
+	$('#dayOfWeek').combobox({
+		width:355,
+		panelHeight:200,
+		editable:false,
+		multiple:true
+	});
+	
+	$('#startDateTime,#endDateTime').datetimebox({
+		width:150,
+		required:true,
+		editable:false
+	});	
+	
+	$('#startDateTime').datetimebox("setValue",quartzServerManager.getnowtime("start"));
+	$('#endDateTime').datetimebox("setValue",quartzServerManager.getnowtime("end"));
+	$("#isRepeatTrigger").attr("checked",false);	
+	$('#repeatCount,#repeatInterval').numberbox("setValue","1");
+	$('#repeatIntervalUnit').combobox("setValue","SECOND");
+	
+	$('#cronTriggerSetDiv').css("display","none");
+	$('#cronExpress').textbox("setValue","");
+	$('#dayOfWeekDiv').css("display","none");
+	$("#endDateTimeDiv").css("display","none");
 }
 
-//通过复选框选择数据
-quartzServerManager.getCheckData = function(){
-	quartzServerManager.selectRowData = [];
-	$("#task-list").datagrid({
-		/*onCheck: function(index,row){
-			var rowStr = JSON.stringify(row);			
-			var nums = $.inArray(rowStr,quartzServerManager.selectRowData);
-            if(nums == -1)
-			    quartzServerManager.selectRowData.push(rowStr);	
-		},*/
-		onCheckAll : function(rows){			
-			quartzServerManager.selectRowData = [];
-			$.each(rows,function(index,item){
-				quartzServerManager.selectRowData.push(JSON.stringify(item));
-			});
-		},
-	    onUncheckAll : function(rows){
-	    	quartzServerManager.selectRowData = [];
-	    }/*,
-	    onUncheck : function(index, row){
-	    	var rowStr = JSON.stringify(row);
-	    	//var nums = quartzServerManager.selectRowData.indexOf(row);
-	    	var nums = $.inArray(rowStr,quartzServerManager.selectRowData);
-			if(nums > -1)
-				quartzServerManager.selectRowData.splice(nums,1);
-	    }*/
-	    
-	});
-}
-
-
-//编缉任务信息
-quartzServerManager.editSelectJob = function(){	
-	var rows = quartzServerManager.selectRowData.length;
-	if(rows != 1 ){
-		$.messager.alert('提示','请选择一行数据进行编缉,当前选中 '+ quartzServerManager.selectRowData.length +' 条数据！');
-		return;
-	}
+//获取表单元素的值
+quartzServerManager.getFormElementsVal = function(){
+	var jobGroup = $("#jobGroup").textbox("getValue");
+	var jobName = $("#jobName").textbox("getValue");
+	var jobDescription = $("#jobDescription").val();
+	var jobClassName = "com.papi.quartz.quartzjobs.HelloJob";
 	
-	$("#dd").css("display","block");
-	$("#jobGroup,#jobName").textbox('readonly',true);
+	var triggerType = $("#triggerType").combobox("getValue");
 	
-	$("#dd").dialog({
-		title: '编辑任务',
-		width: 500,
-		height: 400,
-		closed: false,
-		cache: false,
-		modal: true,
-		buttons:[{
-			text:'确定',
-			iconCls:'icon-ok',
-			handler:function(){
-				var jobGroup = $("#jobGroup").textbox("getValue");
-				var jobName = $("#jobName").textbox("getValue");
-				var jobDescription = $("#jobDescription").val();
-				var jobClassName = quartzServerManager.selectRowData[0].jobClassName;
-				var str= {
-					"jobGroup":jobGroup,
-					"jobName":jobName,
-					"jobDescription":jobDescription,
-					"jobClassName":jobClassName
-				};
-				
-				$.ajax({
-		            type: 'POST',
-		            url: top.Client.CONST_PATH + "/quartzServerManager/editJobInfo",	            
-					data: JSON.stringify(str),
-		            dataType:"json"	,				
-					contentType:"application/json;charset=utf-8",		
-		            success: function(data) {
-		            	$('#dd').dialog('close');
-		                if(data){
-		                	quartzServerManager.selectRowData = [];
-		                	$.messager.alert('提示','更新任务信息成功');
-		                	$("#task-list").datagrid('reload');
-		                }
-		            }
-		        });
-			}
-		},{
-			text:'取消',
-			iconCls:'icon-cancel',
-			handler:function(){
-				$('#dd').dialog('close');
-			}
-		}]
-	});
+	var startDateTime = "", endDateTime = "";
+	if(triggerType == "SIMPLE_TRIGGER"){
+	    startDateTime = $("#startDateTime").datetimebox("getValue");
+		endDateTime = $("#endDateTime").datetimebox("getValue");
+	}else if(triggerType == "DAILY_TRIGGER"){
+		startDateTime = $("#startDateTime").timespinner("getValue");
+		endDateTime = $("#endDateTime").timespinner("getValue");
+		//$("#endDateTimeDiv").css("display","none");
+	}	
 	
-	$("#jobGroup").textbox('setValue',quartzServerManager.selectRowData[0].jobGroup);
-	$("#jobName").textbox('setValue',quartzServerManager.selectRowData[0].jobName);
-	$("#jobDescription").val(quartzServerManager.selectRowData[0].jobDescription);		
+	var dayOfWeek = $("#dayOfWeek").combobox("getValues"); 
+	var isRepeatTrigger = $('#isRepeatTrigger').is(':checked');
+	var repeatCount = $('#repeatCount').numberbox('getValue');
+	var repeatInterval = $('#repeatInterval').numberbox('getValue');
+	var repeatIntervalUnit = $('#repeatIntervalUnit').combobox('getValue');
+	var cronExpress = $('#cronExpress').textbox('getValue');				
+	
+	var str= {
+		"jobGroup":jobGroup,
+		"jobName":jobName,
+		"jobDescription":jobDescription,
+		"jobClassName":jobClassName,
+		
+		"triggerType":triggerType,
+		"startDateTime":startDateTime,
+		"endDateTime":endDateTime,
+		"dayOfWeek" : dayOfWeek,
+		"isRepeatTrigger":isRepeatTrigger,
+		"repeatCount":repeatCount,
+		"repeatInterval":repeatInterval,
+		"repeatIntervalUnit":repeatIntervalUnit,
+		"cronExpress":cronExpress					
+	};
+	
+	return str;
 }
 
 //添加任务
 quartzServerManager.addJob = function(){
 	$("#dd").css("display","block");
 	$("#jobGroup,#jobName").textbox('readonly',false);
+	
 	$("#dd").dialog({
 		title: '添加任务',
 		width: 500,
-		height: 400,
+		height: 450,
 		closed: false,
 		cache: false,
 		modal: true,
 		buttons:[{
 			text:'确定',
 			iconCls:'icon-ok',
-			handler:function(){
-				var jobGroup = $("#jobGroup").textbox("getValue");
-				var jobName = $("#jobName").textbox("getValue");
-				var jobDescription = $("#jobDescription").val();
-				var jobClassName = "com.papi.quartz.quartzjobs.BasicJob";
-				
-				var str= {
-					"jobGroup":jobGroup,
-					"jobName":jobName,
-					"jobDescription":jobDescription,
-					"jobClassName":jobClassName
-				};
+			handler:function(){								
+				var str = quartzServerManager.getFormElementsVal();
+				if(!quartzServerManager.verifyElements()){
+					return false;
+				}
 				
 				$.ajax({
 		            type: 'POST',
@@ -229,20 +195,164 @@ quartzServerManager.addJob = function(){
 			text:'取消',
 			iconCls:'icon-cancel',
 			handler:function(){
+				quartzServerManager.selectRowData = [];
 				$('#dd').dialog('close');
 			}
 		}]
 	});
-	$("#jobGroup,#jobName").textbox('setValue',"");
-	$("#jobDescription,#repeatIntervalUnit").val("");	
-	$('#startDateTime,#endDateTime').datetimebox("setValue",quartzServerManager.getnowtime());
 	
-	$("#isRepeatTrigger").attr("checked",false);
-	$('#cronTriggerSetDiv').css("display","none");
-	$('#repeatCount,#repeatInterval').numberbox("setValue","");
-	$("#repeatIntervalUnit").combobox("setValue","");
+	quartzServerManager.initFormElements();
+	quartzServerManager.triggerTypeChangeToShow('add','SIMPLE_TRIGGER');
+
+}
+
+//设置编辑表单
+quartzServerManager.setEditFormVals = function(){
+	var editData = JSON.parse(quartzServerManager.selectRowData[0]),
+    jobName = editData.jobName,
+	jobGroup = editData.jobGroup,
+	jobDescription = editData.jobDescription;	  
+	
+	if(editData.triggerInfoList == null ){
+		quartzServerManager.initFormElements();
+		quartzServerManager.triggerTypeChangeToShow('edit','SIMPLE_TRIGGER');
+	}else{
+		var triggerType = editData.triggerInfoList.triggerType, 
+		cronExpression = editData.triggerInfoList.cronExpression,
+	    simpleStartDateStr = editData.triggerInfoList.simpleStartDateStr,
+	    simpleEndDateStr = editData.triggerInfoList.simpleEndDateStr,
+	    startTimeOfDay = editData.triggerInfoList.startTimeOfDay,
+	    endTimeOfDay = editData.triggerInfoList.endTimeOfDay,	    
+	    isRepeatTrigger = editData.triggerInfoList.isRepeatTrigger,
+	    repeatCount = editData.triggerInfoList.repeatCount,
+	    repeatInterval = editData.triggerInfoList.repeatInterval,
+	    repeatIntervalUnit = editData.triggerInfoList.repeatIntervalUnit,
+	    dayOfWeekArr = editData.triggerInfoList.dayOfWeek;
+	   			
+		$('#triggerType').combobox('setValue',triggerType);
+		
+		quartzServerManager.triggerTypeChangeToShow('edit',triggerType);
+		
+		if(triggerType == 'SIMPLE_TRIGGER'){		
+			$('#startDateTime').datetimebox('setValue',simpleStartDateStr);
+			$('#endDateTime').datetimebox('setValue',simpleEndDateStr);		
+		}else if(triggerType == 'DAILY_TRIGGER'){
+			$('#startDateTime').timespinner('setValue',startTimeOfDay);
+			$('#endDateTime').timespinner('setValue',"23:59:59");
+			//$("#endDateTimeDiv").css("display","none");
+			$('#dayOfWeek').combobox('setValues',dayOfWeekArr);
+		}	
+		if(isRepeatTrigger){
+			document.getElementById("isRepeatTrigger").checked = true;			
+		}else{
+			document.getElementById("isRepeatTrigger").checked = false;
+		}
+		
+		$("#repeatCount").numberbox("setValue",repeatCount);
+		$("#repeatInterval").numberbox("setValue",repeatInterval);
+		$("#repeatIntervalUnit").combobox("setValue",repeatIntervalUnit);
+		$("#cronExpress").textbox("setValue",cronExpression);
+	}
+	
+	$("#jobGroup").textbox('setValue', jobGroup);
+	$("#jobName").textbox('setValue', jobName);
+	$("#jobDescription").val(jobDescription);
+	   
+}
+
+//编缉任务信息
+quartzServerManager.editSelectJob = function(){	
+	var rows = quartzServerManager.selectRowData.length;		
+	if(rows != 1 ){
+		$.messager.alert('提示','请选择一行数据进行编缉,当前选中 '+ quartzServerManager.selectRowData.length +' 条数据！');
+		return;
+	}
+	
+	$("#dd").css("display","block");
+	$("#jobGroup,#jobName").textbox('readonly',true);	
+	
+	$("#dd").dialog({
+		title: '编辑任务',
+		width: 500,
+		height: 450,
+		closed: false,
+		cache: false,
+		modal: true,
+		buttons:[{
+			text:'确定',
+			iconCls:'icon-ok',
+			handler:function(){				
+				var str = quartzServerManager.getFormElementsVal();
+				if(!quartzServerManager.verifyElements()){
+					return false;
+				}
+				
+				$.ajax({
+		            type: 'POST',
+		            url: top.Client.CONST_PATH + "/quartzServerManager/editJobInfo",	            
+					data: JSON.stringify(str),
+		            dataType:"json"	,				
+					contentType:"application/json;charset=utf-8",		
+		            success: function(data) {
+		            	$('#dd').dialog('close');
+		                if(data){
+		                	quartzServerManager.selectRowData = [];
+		                	$.messager.alert('提示','更新任务信息成功');
+		                	$("#task-list").datagrid('reload');
+		                }
+		            }
+		        });
+			}
+		},{
+			text:'取消',
+			iconCls:'icon-cancel',
+			handler:function(){
+				quartzServerManager.selectRowData = [];
+				$('#dd').dialog('close');
+			}
+		}]
+	});
+	
+	quartzServerManager.initFormElements();
+	quartzServerManager.setEditFormVals();	
+			
 }
  
+//获取选中的数据
+quartzServerManager.getSelectData = function(){
+	$("#task-list").datagrid({
+		onSelect : function (index, row){
+			var rowStr = JSON.stringify(row);			
+			var nums = $.inArray(rowStr,quartzServerManager.selectRowData);
+            if(nums == -1)
+			    quartzServerManager.selectRowData.push(rowStr);											
+		},
+		onUnselect: function(index, row){
+			var rowStr = JSON.stringify(row);
+			var nums = $.inArray(rowStr,quartzServerManager.selectRowData);
+			if(nums > -1)
+				quartzServerManager.selectRowData.splice(nums,1);		
+		}
+	});
+}
+
+//通过复选框选择数据
+quartzServerManager.getCheckData = function(){
+	quartzServerManager.selectRowData = [];
+	$("#task-list").datagrid({
+		onCheckAll : function(rows){			
+			quartzServerManager.selectRowData = [];
+			$.each(rows,function(index,item){
+				quartzServerManager.selectRowData.push(JSON.stringify(item));
+			});
+		},
+	    onUncheckAll : function(rows){
+	    	quartzServerManager.selectRowData = [];
+	    }
+	    
+	});
+}
+
 
 //删除任务
 quartzServerManager.deleteJob = function(){	
@@ -337,7 +447,6 @@ quartzServerManager.resumeJobs = function(){
 	var falg = true;
 	
 	$.each(quartzServerManager.selectRowData,function(index,item){
-		//quartzServerManager.selectRowData[index] = JSON.parse(item);
 		if(item.status == "正常"){
 			$.messager.alert('提示','请不要选中已经正常运行的任务');
 			
@@ -389,7 +498,7 @@ quartzServerManager.batchAddJobs =  function(){
 			iconCls:'icon-ok',
 			handler:function(){
 				var jobCnt = $("#jobCnt").numberbox("getValue");
-				var jobClassName = "com.papi.quartz.quartzjobs.BasicJob";
+				var jobClassName = "com.papi.quartz.quartzjobs.HelloJob";
 				
 				var str= {
 					"jobCnt":jobCnt,
@@ -441,33 +550,107 @@ quartzServerManager.onClickEvent= function(){
 			});
 		}else{
 			$('#repeatCount,#repeatInterval').numberbox({
-				required : false
+				required : false,
+				min:1,
+				value:1
 			});
 			
 			$('#repeatIntervalUnit').combobox({
-				required : false
+				required : false,
 			});
 		}
-	})
+	});
 }
 
-//quartzServerManager
-quartzServerManager.listenTriggerType = function(){
+//根据选择框的值 改变监听其他元素
+quartzServerManager.listenTriggerType = function(operateType){		
 	$("#triggerType").combobox({
 		onChange : function(){
-			var tirggerType = $("#triggerType").combobox('getValue');
-			if(tirggerType == 'cronTrigger'){
-				$('#cronTriggerSetDiv').css("display","block");
-				$('#triggerSetDiv').css("display","none");
-			}else{
-				$('#cronTriggerSetDiv').css("display","none");
-				$('#triggerSetDiv').css("display","block");
-			}
+			var triggerType = $("#triggerType").combobox('getValue');
+			quartzServerManager.triggerTypeChangeToShow(operateType,triggerType);
 		}
 	});
-
+	
+	$('#dayOfWeek').combobox({
+		onSelect : function(record){
+			var valuesArray = $('#dayOfWeek').combobox("getValues");
+			var recordValue = record.value;
+			
+			if(recordValue == 'everyDay'){
+				$.each(valuesArray,function(index,item){
+					if(item != 'everyDay')
+						$('#dayOfWeek').combobox('unselect',item);
+				});
+			}else{
+				$.each(valuesArray,function(index,item){
+					if(item == 'everyDay')
+						$('#dayOfWeek').combobox('unselect',item);
+				});
+			}		
+		}
+	}); 
+		
 }
 
+quartzServerManager.triggerTypeChangeToShow = function(operateType,triggerType){
+	if(triggerType == 'CRON_TRIGGER'){
+		$('#cronTriggerSetDiv').css("display","block");
+		$('#triggerSetDiv,#dayOfWeekDiv').css("display","none");
+	}else if(triggerType == 'SIMPLE_TRIGGER'){
+		$('#cronTriggerSetDiv,#dayOfWeekDiv').css("display","none");
+		$('#triggerSetDiv').css("display","block");
+		
+		$('#startDateTime,#endDateTime').datetimebox({
+			width:150,
+			required:true,
+			editable:false
+		});					
+		if(operateType == "add"){
+			$('#startDateTime').datetimebox("setValue",quartzServerManager.getnowtime("start"));
+			$('#endDateTime').datetimebox("setValue",quartzServerManager.getnowtime("end"));	
+		}
+		
+	}else if(triggerType == 'DAILY_TRIGGER'){
+		$('#cronTriggerSetDiv').css("display","none");
+		$('#triggerSetDiv,#dayOfWeekDiv').css("display","block");	
+		//$("#endDateTimeDiv").css("display","none");
+		
+		$('#startDateTime,#endDateTime').timespinner({
+			width:150,
+			required: true,
+		    showSeconds: true
+		});
+		if(operateType == "add"){
+			$('#startDateTime').timespinner("setValue",quartzServerManager.getnowtime("start").substr(11));
+			$('#endDateTime').timespinner("setValue","23:59:59");
+		}
+	}
+}
+	
+
+quartzServerManager.verifyElements = function(){
+	var triggerType = $('#triggerType').combobox('getValue');
+	if(triggerType == "SIMPLE_TRIGGER"){
+		var startDateTime = $('#startDateTime').datetimebox("getValue");
+		if(new Date(startDateTime) > new Date(quartzServerManager.getnowtime(""))){
+			return true;
+		}
+	}else if(triggerType == "DAILY_TRIGGER" ){
+		var startDateTime = $('#startDateTime').timespinner("getValue");
+		startDateTime = quartzServerManager.getnowtime().substring(0,11) + startDateTime;
+	    
+		if(new Date(startDateTime) > new Date(quartzServerManager.getnowtime(""))){
+			return true;
+		}
+	}
+	
+	$.messager.alert('提示','开始时间不能小于当前时间');
+	
+	return false;
+} 
+
+
+//遮罩、加载
 quartzServerManager.onloading = function(){  
     $("<div class=\"datagrid-mask\"></div>").css({display:"block",width:"100%",height:$(window).height()}).appendTo("body");   
     $("<div class=\"datagrid-mask-msg\"></div>").html("正在处理，请稍候。。。").appendTo("body").css({display:"block","z-index":"200000",left:($(document.body).outerWidth(true) - 190) / 2,top:($(window).height() - 45) / 2});   
@@ -477,13 +660,22 @@ quartzServerManager.removeload = function(){
    $(".datagrid-mask-msg").remove();  
 }  
 
-quartzServerManager.getnowtime = function(){
+//获取当前时间
+quartzServerManager.getnowtime = function(flag){
     var nowtime = new Date();
     var year = nowtime.getFullYear();
     var month = quartzServerManager.padleft0(nowtime.getMonth() + 1);
     var day = quartzServerManager.padleft0(nowtime.getDate());
     var hour = quartzServerManager.padleft0(nowtime.getHours());
-    var minute = quartzServerManager.padleft0(nowtime.getMinutes()+1);
+    var minute;
+    if(flag == "start"){
+    	 minute = quartzServerManager.padleft0(nowtime.getMinutes()+1);
+    }else if(flag == "end"){
+    	 minute = quartzServerManager.padleft0(nowtime.getMinutes()+2);	
+    }else{
+    	minute = quartzServerManager.padleft0(nowtime.getMinutes());
+    }    	
+    
     var second = quartzServerManager.padleft0(nowtime.getSeconds());
    
     return year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second ;
@@ -491,4 +683,82 @@ quartzServerManager.getnowtime = function(){
 //补齐两位数
 quartzServerManager.padleft0 = function(obj) {
     return obj.toString().replace(/^[0-9]{1}$/, "0" + obj);
+}
+
+quartzServerManager.format = function(time, format){
+	    var t = new Date(time);
+	    var tf = function(i){return (i < 10 ? '0' : '') + i};
+	    return format.replace(/yyyy|MM|dd|HH|mm|ss/g, function(a){
+	        switch(a){
+	            case 'yyyy':
+	                return tf(t.getFullYear());
+	                break;
+	            case 'MM':
+	                return tf(t.getMonth() + 1);
+	                break;
+	            case 'mm':
+	                return tf(t.getMinutes());
+	                break;
+	            case 'dd':
+	                return tf(t.getDate());
+	                break;
+	            case 'HH':
+	                return tf(t.getHours());
+	                break;
+	            case 'ss':
+	                return tf(t.getSeconds());
+	                break;
+	        }
+	    })
+	}
+
+//获取任务的执行日志
+quartzServerManager.getJobLogs = function(){
+	var rows = quartzServerManager.selectRowData.length;		
+	if(rows != 1 ){
+		$.messager.alert('提示','请选择一条任务查看相关日志,当前选中 '+ quartzServerManager.selectRowData.length +' 条数据！');
+		return false;
+	}
+	
+	var selectData = JSON.parse(quartzServerManager.selectRowData[0]);
+	
+/*	$.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: top.Client.CONST_PATH + "/quartzServerManager/getJobLogs?jobName=" + selectData.jobName + "&jobGroup=" + selectData.jobGroup,	            						
+        success: function(data) {		            	
+            console.log(data);
+        }
+    });*/
+	
+	$("#jobLog-list").datagrid({
+		width:700,
+		height:850,
+		fitColumns:true,
+		fit:true,	
+		rownumbers:true,
+		singleSelect:false,
+		method:"get",
+		url: top.Client.CONST_PATH + "/quartzServerManager/getJobLogs?jobName=" + selectData.jobName + "&jobGroup=" + selectData.jobGroup,
+		loadMsg:'数据加载中...'			
+	});
+	
+	$("#jobLogDiv").css("display","block");
+	$("#jobLogDiv").dialog({
+		title: '任务日志',
+		width: 950,
+		height: 900,
+		closed: false,
+		cache: false,
+		modal: true
+	});
+}
+
+quartzServerManager.setColoumsFormater = function(val){
+	if(val == "SIMPLE_TRIGGER")
+		return "简单触发器";
+	else if (val == "DAILY_TRIGGER")
+		return "每天间隔触发器";
+	else if (val == "CRON_TRIGGER")
+		return "cron触发器";
 }

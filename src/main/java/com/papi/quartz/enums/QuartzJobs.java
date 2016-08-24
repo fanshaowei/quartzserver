@@ -2,6 +2,7 @@ package com.papi.quartz.enums;
 
 public enum QuartzJobs {
     BasicJob("com.papi.quartz.quartzjobs.BasicJob"),
+    HelloJob("com.papi.quartz.quartzjobs.HelloJob"),
     SceneRelateJob("com.papi.quartz.quartzjobs.SceneRelateJob"),
     SenseControlJob("com.papi.quartz.quartzjobs.SenseControlJob");
     

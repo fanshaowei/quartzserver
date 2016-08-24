@@ -10,10 +10,10 @@
         <result property="jobType" column="jobType" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="jobStatus" column="jobStatus" javaType="java.lang.String" jdbcType="VARCHAR"/>
         
-        <result property="startDate" column="startDate" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
-        <result property="endDate" column="endDate" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
-        <result property="fireDate" column="fireDate" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
-        <result property="nextFireDate" column="nextFireDate" javaType="java.util.Date" jdbcType="TIMESTAMP"/>
+        <result property="startDate" column="startDate" javaType="java.util.Date" />
+        <result property="endDate" column="endDate" javaType="java.util.Date" />
+        <result property="fireDate" column="fireDate" javaType="java.util.Date" />
+        <result property="nextFireDate" column="nextFireDate" javaType="java.util.Date" />
         			
         <result property="triggerType" column="triggerType" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="firedResult" column="firedResult" javaType="java.lang.String" jdbcType="VARCHAR"/>
@@ -44,7 +44,8 @@
             <if test="fireDate != null">
                 AND fireDate = #{fireDate}
             </if>
-        </trim>    
+        </trim>   
+        ORDER BY fireDate DESC 
     </select>
 
     <insert id="insert" parameterType="com.papi.quartz.bean.QutzJobFiredDetails">
@@ -96,7 +97,7 @@
         </set>
         WHERE
         <trim prefixOverrides="and | or">  
-            <if test="id != 0">
+            <if test="id != null">
             AND id = #{id}
             </if>         
             <if test="jobName != null">

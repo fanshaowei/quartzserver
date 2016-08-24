@@ -57,6 +57,7 @@ public class AppJobAction {
     			(AppRequestJobInfo)JSONObject.toBean(JSONObject.fromObject(repuestStr), AppRequestJobInfo.class);
     	
     	JobInfo jobInfo = new JobInfo();
+    	String idGateway = appRequestJobInfo.getIdGateway();
     	String idFamily = appRequestJobInfo.getIdFamily();
     	String jobName = appRequestJobInfo.getJobName();
     	JSONObject sourceScene = JSONObject.fromObject(appRequestJobInfo.getSourceScene());
@@ -134,6 +135,7 @@ public class AppJobAction {
     	//保存关联任务到数据库
     	SenseDeviceSceneRelate senseDeviceSceneRelate = new SenseDeviceSceneRelate();
     	senseDeviceSceneRelate.setIdFamily(Integer.parseInt(idFamily));
+    	senseDeviceSceneRelate.setIdGateway(idGateway);
     	senseDeviceSceneRelate.setJobName(jobName);
     	senseDeviceSceneRelate.setIdDevice(sourceScene.getString("idDevice"));
     	
@@ -377,6 +379,7 @@ public class AppJobAction {
     			(AppRequestJobInfo)JSONObject.toBean(JSONObject.fromObject(repuestStr), AppRequestJobInfo.class);
     	
     	String idFamily= appRequestJobInfo.getIdFamily();
+    	String idGateway = appRequestJobInfo.getIdGateway();
     	String jobName =  appRequestJobInfo.getJobName();
     	
     	//获取原来job的dataMap    
@@ -517,7 +520,8 @@ public class AppJobAction {
 		//更改关联任务状态为1，执行关联
 		SenseDeviceSceneRelate senseDeviceSceneRelate = new SenseDeviceSceneRelate();
 		senseDeviceSceneRelate.setId(idParam);
-    	senseDeviceSceneRelate.setIdFamily(Integer.parseInt(idFamily));    	    	
+    	senseDeviceSceneRelate.setIdFamily(Integer.parseInt(idFamily));  
+    	senseDeviceSceneRelate.setIdGateway(idGateway);
     	senseDeviceSceneRelate.setIdDevice(sourceScene.getString("idDevice"));    	    	    	    	
     	senseDeviceSceneRelate.setIsValid("1");    	    
     	
