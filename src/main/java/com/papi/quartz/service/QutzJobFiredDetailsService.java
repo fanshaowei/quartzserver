@@ -12,5 +12,7 @@ public interface QutzJobFiredDetailsService {
 	public int saveQutzJobFiredDetails(QutzJobFiredDetails qutzJobFiredDetails) throws Exception;
 	
 	public int updateQutzJobFiredDetails(QutzJobFiredDetails qutzJobFiredDetails) throws Exception;
+	
+	public int deleteQutzJobFiredDetails(Map<String, Object> paramMap) throws Exception;
     
 }

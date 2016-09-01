@@ -17,26 +17,10 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="src/main/webapp/WEB-INF/lib/gf.javax.transaction-1.1.jar">
-		<attributes>
-			<attribute name="org.eclipse.jst.component.dependency" value="/WEB-INF/lib"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="src/main/webapp/WEB-INF/lib/quartz-examples-2.2.2.jar" sourcepath="E:/install/software/java/quartz/quartz-2.2.2-distribution/quartz-2.2.2/examples">
-		<attributes>
-			<attribute name="org.eclipse.jst.component.dependency" value="/WEB-INF/lib"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="src/main/webapp/WEB-INF/lib/xbean_tmra_jobTypev.jar">
-		<attributes>
-			<attribute name="org.eclipse.jst.component.dependency" value="/WEB-INF/lib"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="src/main/webapp/WEB-INF/lib/xbean.jar">
-		<attributes>
-			<attribute name="org.eclipse.jst.component.dependency" value="/WEB-INF/lib"/>
-		</attributes>
-	</classpathentry>
+	<classpathentry kind="lib" path="src/main/webapp/WEB-INF/lib/gf.javax.transaction-1.1.jar"/>
+	<classpathentry kind="lib" path="src/main/webapp/WEB-INF/lib/quartz-examples-2.2.2.jar" sourcepath="E:/install/software/java/quartz/quartz-2.2.2-distribution/quartz-2.2.2/examples"/>
+	<classpathentry kind="lib" path="src/main/webapp/WEB-INF/lib/xbean_tmra_jobTypev.jar"/>
+	<classpathentry kind="lib" path="src/main/webapp/WEB-INF/lib/xbean.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4">
 		<attributes>
 			<attribute name="org.eclipse.jst.component.dependency" value="/WEB-INF/lib"/>

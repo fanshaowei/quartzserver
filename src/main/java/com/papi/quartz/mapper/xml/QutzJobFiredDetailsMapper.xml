@@ -75,7 +75,10 @@
         <trim prefixOverrides="and | or">
             <if test="jobName != null">
                 AND jobName=#{jobName}
-            </if>            
+            </if> 
+            <if test="jobGroup != null">
+                AND jobGroup=#{jobGroup}
+            </if>           
         </trim>
     </delete>
     

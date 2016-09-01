@@ -603,10 +603,13 @@ public class AppJobAction {
 		}		   
 		
 		List<? extends Trigger> triggerList = quartzService.getTriggersOfJob(jobName, idFamily);
-		String name = triggerList.get(0).getKey().getName();
-		
-		triggerInfo.setTriggerName(name);
-		
+		if(triggerList != null && triggerList.size() >= 0){
+			String name = triggerList.get(0).getKey().getName();			
+			triggerInfo.setTriggerName(name);	
+		}else{
+			return ReturnBean.ReturnBeanToString("fail", "更新的任务没有触发器", null);
+		}
+				
 		boolean editTriggerInfo = quartzService.editTrigger(jobInfo, triggerInfo);
     	if(!editTriggerInfo){
     		Map<String,String> map = new HashMap<String,String>();
@@ -755,7 +758,11 @@ public class AppJobAction {
     	if(jobType.equals("SceneRelateJob")){
     		SenseDeviceSceneRelate senseDeviceSceneRelate = new SenseDeviceSceneRelate();
 			JSONObject sourceScene = JSONObject.fromObject(jobDataMap_temp.getString("sourceScene"));
-			senseDeviceSceneRelate.setIdDevice(sourceScene.getString("idDevice"));
+			if(sourceScene != null && sourceScene.size() > 0){
+				senseDeviceSceneRelate.setIdDevice(sourceScene.getString("idDevice"));	
+			}else{
+				senseDeviceSceneRelate.setIdDevice("0");
+			}			
 			senseDeviceSceneRelate.setJobName(jobName);
     		try {	
     			this.senseDeviceSceneRelateService.deleteById(senseDeviceSceneRelate);

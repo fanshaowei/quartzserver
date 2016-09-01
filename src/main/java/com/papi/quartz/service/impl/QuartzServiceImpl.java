@@ -34,6 +34,7 @@ import org.quartz.TimeOfDay;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
+import org.quartz.DateBuilder.IntervalUnit;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.impl.triggers.DailyTimeIntervalTriggerImpl;
@@ -298,12 +299,19 @@ public class QuartzServiceImpl implements QuartzService,Serializable {
 		}			
 		
 		Date previousFireTime = trigger.getPreviousFireTime();
+		Date nextFireTime = trigger.getNextFireTime();
 		if(previousFireTime == null){
 			triggerInfo.setPreviousFireTime(null);	
 		}else{
 			triggerInfo.setPreviousFireTime(DateUtils.dateToString(trigger.getPreviousFireTime(), DateUtils.TIME_PATTERN_YMDHMS));
 		}	
-		triggerInfo.setNextFireTime(DateUtils.dateToString(trigger.getNextFireTime(), DateUtils.TIME_PATTERN_YMDHMS));
+		
+		if(nextFireTime == null){
+			triggerInfo.setNextFireTime(null);
+		}else{
+			triggerInfo.setNextFireTime(DateUtils.dateToString(trigger.getNextFireTime(), DateUtils.TIME_PATTERN_YMDHMS));
+		}
+		
 		
 		//简单触发器
 		if((trigger instanceof SimpleTrigger)){
@@ -591,9 +599,8 @@ public class QuartzServiceImpl implements QuartzService,Serializable {
 		TriggerBuilder<Trigger> triggerBuilder = getTriggerBuilder(jobInfo,triggerInfo);
 		//创建一个SimpleScheduleBuilder(定义了 严格/文字 基于间隔时间表的触发器) 
 		SimpleScheduleBuilder simpleScheduleBuilder = SimpleScheduleBuilder.simpleSchedule()
-				.withMisfireHandlingInstructionIgnoreMisfires();//错过执行时间的就不理
-				 						
-		
+				.withMisfireHandlingInstructionNextWithExistingCount();//错过执行时间的就不理
+				 								
 		String startDate = triggerInfo.getSimpleStartDateStr();
 		String endDate = triggerInfo.getSimpleEndDateStr();				
 		boolean isRepeatTrigger = triggerInfo.getIsRepeatTrigger();		
@@ -657,7 +664,8 @@ public class QuartzServiceImpl implements QuartzService,Serializable {
 		}
 		
 		DailyTimeIntervalScheduleBuilder dailyTimeIntervalScheduleBuilder = DailyTimeIntervalScheduleBuilder.dailyTimeIntervalSchedule()
-				.withMisfireHandlingInstructionIgnoreMisfires();
+				.withMisfireHandlingInstructionDoNothing();
+				//.withMisfireHandlingInstructionIgnoreMisfires();
 		
 		//每天的开始时间、结束时间		
 		String startTimeOfDay = triggerInfo.getStartTimeOfDay();
@@ -712,6 +720,10 @@ public class QuartzServiceImpl implements QuartzService,Serializable {
 			//间隔时间大小和间隔的单位
 			int repeatInterval = triggerInfo.getRepeatInterval();
 			String repeatIntervalUnit = triggerInfo.getRepeatIntervalUnit();
+			if(repeatIntervalUnit.equals("HOUR")){//由于原码中对小时的转换有bug,故对小时的转为分钟
+				repeatIntervalUnit = "MINUTE";
+				repeatInterval = (int) (repeatInterval * 60);
+			}
 			
 			//如果触发器有指定repeatCount,则次数执行完后会自动删除触发器,改用endingDailyAfterCount
 			triggerBuilder.usingJobData("repeatCount", Integer.toString(triggerInfo.getRepeatCount()));
@@ -791,6 +803,10 @@ public class QuartzServiceImpl implements QuartzService,Serializable {
 		//重复间隔，重复单位
 		int repeatInterval = triggerInfo.getRepeatInterval();
 		String intervalUnit = triggerInfo.getRepeatIntervalUnit();
+		if(intervalUnit.equals("HOUR")){//由于原码中对小时的转换有bug,故对小时的转为分钟
+			intervalUnit = "MINUTE";
+			repeatInterval = (int) (repeatInterval * 60);
+		}
 		
 		//设置week
 		String[] dayOfWeek = triggerInfo.getDayOfWeek();

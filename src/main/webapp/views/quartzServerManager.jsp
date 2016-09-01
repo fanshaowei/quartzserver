@@ -69,7 +69,7 @@
     <div style="height:5%;width:100%;">
         <span class="contain-title" >
 	        <!-- <span class="contain-title-icon icon-configure" ></span> -->
-	        <span class="contain-title-memo"><h3>定时服务器测试</h3></span>
+	        <span class="contain-title-memo"><h3 style="margin: 0px;">定时服务器测试</h3></span>
         </span>               
     </div>
     
@@ -77,16 +77,16 @@
 	<table id="task-list" style="height:100%;width:100%;">
 	    <thead>
 		    <tr>
-		      <th data-options="field:'ck',checkbox:true"></th>
-		      <th data-options="field:'jobGroup' ,align:'center'"  width="80">任务组</th>
+		      <!-- <th data-options="field:'ck',checkbox:true"></th>
+		      <th data-options="field:'jobGroup' ,align:'center',formatter:function(value){var val = parseInt(value.substring(0,value.indexOf('_'))); console.log(typeof val);return val;}" width="80" sortable="true" sortOrder="asc">任务组</th>
 		      <th data-options="field:'jobName' ,align:'center'" width="80">任务名</th>		      
 		      <th data-options="field:'status' ,align:'center'" width="80">任务状态</th>		      
 		      <th data-options="field:'jobClassName' ,align:'center'" width="80" hidden="true">执行任务相关类</th>		      
 		      <th data-options="field:'triggerType' ,align:'center', formatter:function(value){return quartzServerManager.setColoumsFormater(value);}" width="80">触发器类型</th>
 		      <th data-options="field:'fireDate' ,align:'center'" width="80">最近触发时间</th>		  
-		      <th data-options="field:'nextFireDate' ,align:'center'" width="80">下次触发时间</th>		      	     
-		      <th data-options="field:'triggerInfoList' ,align:'center'" width="80" hidden="true">触发器详细信息</th>
-		      <th data-options="field:'jobDescription' ,align:'center'" width="80">备注</th>
+		      <th data-options="field:'nextFireDate' ,align:'center'" width="80" >下次触发时间</th>		      	     
+		      <th data-options="field:'triggerInfoList' ,align:'center'" width="80"  hidden="true">触发器详细信息</th>
+		      <th data-options="field:'jobDescription' ,align:'center'" width="80">备注</th> -->
 		    </tr>
 		</thead>	    
     </table>
@@ -185,8 +185,8 @@
 		    <tr>
 		      <th data-options="field:'jobGroup' ,align:'center'"  width="80">任务组</th>
 		      <th data-options="field:'jobName' ,align:'center'" width="80">任务名</th>		      		      	     
-		      <th data-options="field:'fireDate' ,align:'center' , formatter:function(value){return quartzServerManager.format(value, 'yyyy-MM-dd HH:mm:ss');}" width="80" >执行时间</th>		      
-		      <th data-options="field:'nextFireDate' ,align:'center' , formatter:function(value){return quartzServerManager.format(value, 'yyyy-MM-dd HH:mm:ss');}" width="80">下次执行时间</th>		
+		      <th data-options="field:'fireDate' ,align:'center' , formatter:function(value){return quartzServerManager.format(value, 'yyyy-MM-dd HH:mm:ss');}" width="80">最近触发时间</th>		      
+		      <th data-options="field:'nextFireDate' ,align:'center' , formatter:function(value){return quartzServerManager.format(value, 'yyyy-MM-dd HH:mm:ss');}" width="80">下次触发时间</th>		
 		      <th data-options="field:'jobStatus' ,align:'center'" width="80">执行状态</th>
 		      <th data-options="field:'firedResult' ,align:'center'" width="80">执行结果</th>		      
 		    </tr>

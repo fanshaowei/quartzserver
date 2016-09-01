@@ -19,6 +19,7 @@ quartzServerManager.initDataGrid = function(){
 	$("#task-list").datagrid({
 		width:"400",
 		height:"350",
+		remoteSort: false,
 		fitColumns:true,
 		fit:true,	
 		rownumbers:true,
@@ -68,7 +69,38 @@ quartzServerManager.initDataGrid = function(){
 		}],
 		method:"get",
 		url: top.Client.CONST_PATH + "/quartzServerManager/getAllJobDetails",
-		loadMsg:'数据加载中...'
+		loadMsg:'数据加载中...',
+		columns:[[
+		    {field:'ck',checkbox:true},          
+		    {field:'jobGroup',title:'任务组',align:'center', width:80, sortable:true, sortOrder: 'asc',
+		    	/*formatter:function(value){
+		    		var val = parseInt(value.substring(0,value.indexOf('_'))); 
+		    		return val;
+		    	},*/
+		    	sorter:function(a,b){
+		    		/*if(a.length > b.length) return 1;
+		            else if(a.length < b.length) return -1;
+		            else if(a > b) return 1;
+		            else return -1;*/
+		    		var number1 = parseInt(a.substring(0,a.indexOf('_')));  
+		    		var number2 = parseInt(b.substring(0,b.indexOf('_')));  
+		    		   
+		    		 return (number1 > number2 ? 1 : -1);
+		    	}
+		    },
+		    {field:'jobName',title:'任务名',align:'center',width:80},
+		    {field:'status',title:'任务状态',align:'center',width:80},
+		    {field:'jobClassName',title:'执行任务相关类',align:'center',width:80,hidden:true},
+		    {field:'triggerType',title:'触发器类型',align:'center',width:80,
+		    	formatter:function(value){
+		    		return quartzServerManager.setColoumsFormater(value);
+		    	}
+		    },
+		    {field:'fireDate',title:'最近触发时间',align:'center',width:80},
+		    {field:'nextFireDate',title:'下次触发时间',align:'center',width:80},
+		    {field:'triggerInfoList',title:'触发器详细信息',align:'center',width:80,hidden:true},
+		    {field:'jobDescription',title:'备注',align:'center',width:80}		    
+		]]
 	});
 	 		
 }
@@ -171,7 +203,7 @@ quartzServerManager.addJob = function(){
 			iconCls:'icon-ok',
 			handler:function(){								
 				var str = quartzServerManager.getFormElementsVal();
-				if(!quartzServerManager.verifyElements()){
+				if(str.triggerType != "CRON_TRIGGER" && !quartzServerManager.verifyElements()){
 					return false;
 				}
 				
@@ -283,7 +315,7 @@ quartzServerManager.editSelectJob = function(){
 			iconCls:'icon-ok',
 			handler:function(){				
 				var str = quartzServerManager.getFormElementsVal();
-				if(!quartzServerManager.verifyElements()){
+				if(str.triggerType != "CRON_TRIGGER" && !quartzServerManager.verifyElements()){
 					return false;
 				}
 				
@@ -356,6 +388,12 @@ quartzServerManager.getCheckData = function(){
 
 //删除任务
 quartzServerManager.deleteJob = function(){	
+	
+	if(quartzServerManager.selectRowData.length == 0){
+		$.messager.alert('提示','当前没有选中删除的数据！');
+		return;
+	}
+	
 	$.each(quartzServerManager.selectRowData,function(index,item){
 		quartzServerManager.selectRowData[index] = JSON.parse(item);
 	});
@@ -392,6 +430,12 @@ quartzServerManager.deleteJob = function(){
 
 //暂停任务
 quartzServerManager.pauseJobs = function(){
+	
+	if(quartzServerManager.selectRowData.length == 0){
+		$.messager.alert('提示','当前没有选中暂停的数据！');
+		return;
+	}
+	
 	$.each(quartzServerManager.selectRowData,function(index,item){
 		quartzServerManager.selectRowData[index] = JSON.parse(item);
 	});
@@ -747,7 +791,7 @@ quartzServerManager.getJobLogs = function(){
 	$("#jobLogDiv").dialog({
 		title: '任务日志',
 		width: 950,
-		height: 900,
+		height: 500,
 		closed: false,
 		cache: false,
 		modal: true

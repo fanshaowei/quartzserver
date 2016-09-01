@@ -126,7 +126,10 @@ public class SchdulerLoaderListener implements ServletContextListener
 	    
 	    properties.setProperty("org.quartz.dataSource.myDS.maxConnections", 
 	      config.getProperty("org.quartz.dataSource.myDS.maxConnections") == null ? "30" : config.getProperty("org.quartz.dataSource.myDS.maxConnections"));
-	 
+	   //
+	    properties.setProperty("org.quartz.dataSource.myDS.validationQuery", "select 1 from dual");
+	    //properties.setProperty("org.quartz.dataSource.myDS.idleConnectionValidationSeconds", "60");
+	   // 
 	    properties.setProperty("org.quartz.jobListener.CustomJobListener.class", 
 	      config.getProperty("org.quartz.jobListener.CustomJobListener.class") == null ? "com.papi.quartz.listener.CustomJobListener" : config.getProperty("org.quartz.jobListener.CustomJobListener.class"));
 	    

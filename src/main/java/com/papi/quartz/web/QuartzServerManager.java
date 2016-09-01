@@ -1,10 +1,14 @@
 package com.papi.quartz.web;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Resource;
@@ -14,6 +18,10 @@ import javax.servlet.http.HttpServletRequest;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
+import org.apache.log4j.Logger;
+import org.quartz.JobKey;
+import org.quartz.SchedulerException;
+import org.quartz.impl.matchers.GroupMatcher;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -34,10 +42,16 @@ import com.papi.quartz.utils.DateUtils;
 @Controller
 @RequestMapping("/quartzServerManager")
 public class QuartzServerManager {
+	private Logger logger = Logger.getLogger(QuartzServerManager.class.getName());
 	
 	@Resource
 	private QutzJobFiredDetailsService qutzJobFiredDetailsService;
 	
+	/**
+	 * 获取任务列表
+	 * @param request
+	 * @return
+	 */
 	@RequestMapping(value="/getAllJobDetails",method = RequestMethod.GET)
 	public @ResponseBody Map<String,Object> getAllJobDetails(HttpServletRequest request){		
 		Map<String,Object> returnMap = new HashMap<String,Object>();
@@ -81,6 +95,11 @@ public class QuartzServerManager {
 		return returnMap;
 	}
 	
+	/**
+	 * 编辑任务信息
+	 * @param request
+	 * @return
+	 */
 	@RequestMapping(value="/editJobInfo",method = RequestMethod.POST)
 	public @ResponseBody boolean editJobInfo(HttpServletRequest request){
 		boolean flag = false;
@@ -152,6 +171,11 @@ public class QuartzServerManager {
 		return flag;
 	}
 	
+	/**
+	 * 删除任务
+	 * @param request
+	 * @return
+	 */
 	@RequestMapping(value="/deleteJobs",method = RequestMethod.POST)
 	public @ResponseBody boolean deleteJobs(HttpServletRequest request){
 		ServletContext servletContext = request.getServletContext(); 
@@ -161,6 +185,7 @@ public class QuartzServerManager {
 		JSONArray requestJsonArray = JSONArray.fromObject(requestStr);
 		
 		JobInfo jobInfo = new JobInfo();
+		Map<String,Object> paramMap = new HashMap<String, Object>();
 		for(int i=0; i<requestJsonArray.size(); i++){
 			JSONObject jsonObject = requestJsonArray.getJSONObject(i);
 						
@@ -171,10 +196,23 @@ public class QuartzServerManager {
 			if(!flag){
 				return false;
 			}
+			
+			paramMap.put("jobName", jsonObject.getString("jobName"));
+			paramMap.put("jobGroup", jsonObject.getString("jobGroup"));
+			try {
+				qutzJobFiredDetailsService.deleteQutzJobFiredDetails(paramMap);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		return true;
 	}
 	
+	/**
+	 * 暂停任务
+	 * @param request
+	 * @return
+	 */
 	@RequestMapping(value="/pauseJobs",method = RequestMethod.POST)
 	public @ResponseBody boolean pauseJobs(HttpServletRequest request){
 		ServletContext servletContext = request.getServletContext(); 
@@ -198,6 +236,11 @@ public class QuartzServerManager {
 		return true;
 	}
 	
+	/**
+	 * 恢复任务
+	 * @param request
+	 * @return
+	 */
 	@RequestMapping(value="/resumeJobs",method = RequestMethod.POST)
 	public @ResponseBody boolean resumeJobs(HttpServletRequest request){
 		ServletContext servletContext = request.getServletContext(); 
@@ -221,10 +264,15 @@ public class QuartzServerManager {
 		return true;
 	}
 	
+	/**
+	 * 批量添加任务
+	 * @param request
+	 * @return
+	 */
 	@RequestMapping(value="/batchAddJobs",method = RequestMethod.POST)
 	public @ResponseBody boolean batchAddJobs(HttpServletRequest request){
 		ServletContext servletContext = request.getServletContext(); 
-		QuartzService quartzServiceImpl = new QuartzServiceImpl(servletContext);
+		QuartzService quartzServiceImpl = new QuartzServiceImpl(servletContext);			
 		
 		String requestStr = CommonUtils.reqtoString(request);
 		JSONObject requestJson = JSONObject.fromObject(requestStr);	
@@ -232,45 +280,88 @@ public class QuartzServerManager {
 		String jobClassName = requestJson.getString("jobClassName");
 		
 		JobInfo jobInfo = new JobInfo();
-		for(int i=0; i<jobCnt; i++){
-			String jobuuid = UUID.randomUUID().toString();
+		
+		Date date = new Date();
+	    Calendar calendar =  Calendar.getInstance();
+	    calendar.setTime(date);
+		
+	    StringBuilder sb = new StringBuilder();
+	    String sec;
+	    String min;
+	    String hour;
+	    boolean flag;
+	    String jobuuid;
+	    String cronExpression;
+		for(int i=0; i<jobCnt; i++){			
+			int num  = this.getJobCounts(request)+1;
+			
+			sb.delete(0, sb.length());
+			sb.append(String.valueOf(num));
+			sb.append("_");
+			sb.append(UUID.randomUUID().toString());
+			
+		    jobuuid = sb.toString();
+			//String jobuuid = String.valueOf(num) + "_" + UUID.randomUUID().toString();
 		    jobInfo.setJobGroup(jobuuid);
 		    jobInfo.setJobName(jobuuid);
 		    jobInfo.setJobClassName(jobClassName);
 		    
-		    boolean flag = quartzServiceImpl.addNewJob(jobInfo);
+		    flag = quartzServiceImpl.addNewJob(jobInfo);
 		    if(!flag){
 		    	return false;
-		    }
-		}
+		    }		   
+		    
+		    calendar.add(Calendar.SECOND, 10);		    
+		    sec = Integer.toString(calendar.get(Calendar.SECOND));
+		    min = Integer.toString(calendar.get(Calendar.MINUTE));
+		    hour = Integer.toString(calendar.get(Calendar.HOUR_OF_DAY));
+		    //String day = Integer.toString(calendar.get(Calendar.DAY_OF_MONTH));
+		    //String month = Integer.toString(calendar.get(Calendar.MONTH + 1));
+		    
+		    sb.delete(0, sb.length());
+		    sb.append(sec);
+		    sb.append(" ");
+		    sb.append(min);
+		    sb.append(" ");
+		    sb.append(hour);
+		    sb.append(" * * ?");		    		    
+		    cronExpression = sb.toString();
+		    //String cronExpression = sec + " " + min + " " + hour + " " + "*" + " "  + "*" + " ?";
+		    
+		    TriggerInfo triggerInfo = new TriggerInfo();
+			triggerInfo.setTriggerGroup(jobuuid);
+			triggerInfo.setTriggerName(jobuuid);
+			triggerInfo.setTriggerType("CRON_TRIGGER");						
+			triggerInfo.setCronExpression(cronExpression);
+			
+			flag = quartzServiceImpl.addTrigger(jobInfo, triggerInfo);
+			
+		}				
 		
 		return true;
 	}	
 	
+	/**
+	 * 获取任务执行日志
+	 * @param jobName
+	 * @param jobGroup
+	 * @return
+	 */
 	@RequestMapping(value="/getJobLogs",method = RequestMethod.GET)
 	public @ResponseBody Map<String,Object> getJobLogs(@RequestParam("jobName") String jobName, @RequestParam("jobGroup") String jobGroup){						
 		Map<String,Object> returnMap = new HashMap<String,Object>();
 		
 		Map<String,Object> paramMap = new HashMap<String,Object>();
 		try{
-			paramMap.put("jobName", new String(jobName.getBytes("ISO-8859-1"),"UTF-8"));
-			paramMap.put("jobGroup", new String(jobGroup.getBytes("ISO-8859-1"),"UTF-8"));	
+			paramMap.put("jobName", jobName);
+			paramMap.put("jobGroup", jobGroup);	
 		}catch(Exception ex){
 			
 		}		
 		
 		List<QutzJobFiredDetails> qutzJobFiredDetailsList = null;
 		try {
-			qutzJobFiredDetailsList = qutzJobFiredDetailsService.findQutzJobFiredDetails(paramMap);
-			/*ListIterator<QutzJobFiredDetails> iterator = qutzJobFiredDetailsList.listIterator();
-			while(iterator.hasNext()){
-				QutzJobFiredDetails qjfd = iterator.next();
-				qjfd.setFireDate(DateUtils.dateFormat(qjfd.getFireDate(), DateUtils.TIME_PATTERN_YMDHMS));
-				qjfd.setNextFireDate(DateUtils.dateFormat(qjfd.getNextFireDate(), DateUtils.TIME_PATTERN_YMDHMS));
-				qjfd.setStartDate(DateUtils.dateFormat(qjfd.getStartDate(), DateUtils.TIME_PATTERN_YMDHMS));
-				qjfd.setEndDate(DateUtils.dateFormat(qjfd.getEndDate(), DateUtils.TIME_PATTERN_YMDHMS));
-			}*/
-			
+			qutzJobFiredDetailsList = qutzJobFiredDetailsService.findQutzJobFiredDetails(paramMap);				
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -285,4 +376,33 @@ public class QuartzServerManager {
 		
 		return returnMap;
 	}
+	
+	/**
+	 * 获取当前的任务数
+	 * @param request
+	 * @return
+	 */
+	public int getJobCounts(HttpServletRequest request){
+		int jobCounts = 0;
+		
+		ServletContext servletContext = request.getServletContext(); 
+		QuartzService quartzServiceImpl = new QuartzServiceImpl(servletContext);
+		try {
+			List<String> allJobGroupNamesList = quartzServiceImpl.getTheScheduler().getJobGroupNames();
+			Iterator<String> jobGroupIterator = allJobGroupNamesList.iterator();
+			while(jobGroupIterator.hasNext()){
+				//获取任务组名
+				String groupNameStr = jobGroupIterator.next();
+				//根据组名获取jobKey集合(jok由jonGroupName和jobName(唯一) 组成)
+				Set<JobKey> jobKeySet = quartzServiceImpl.getTheScheduler().getJobKeys(GroupMatcher.jobGroupEndsWith(groupNameStr));
+				
+				jobCounts += jobKeySet.size();
+			}
+		} catch (SchedulerException e) {
+			e.printStackTrace();
+		}
+		
+		return jobCounts;
+	}
+	
 }

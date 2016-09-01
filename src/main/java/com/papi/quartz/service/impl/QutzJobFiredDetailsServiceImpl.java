@@ -39,6 +39,13 @@ public class QutzJobFiredDetailsServiceImpl implements QutzJobFiredDetailsServic
 				
 		return qutzJobFiredDetailsMapper.update(qutzJobFiredDetails);
 	}
-	
+
+	@Override
+	public int deleteQutzJobFiredDetails(Map<String, Object> paramMap)
+			throws Exception {		
+		
+		return qutzJobFiredDetailsMapper.delete(paramMap);
+	}
+			
 	
 }
