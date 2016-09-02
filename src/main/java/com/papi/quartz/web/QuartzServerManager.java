@@ -1,5 +1,8 @@
 package com.papi.quartz.web;
 
+import static org.quartz.JobBuilder.newJob;
+import static org.quartz.TriggerBuilder.newTrigger;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -19,8 +22,15 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
+import org.quartz.DateBuilder;
+import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
+import org.quartz.SimpleTrigger;
+import org.quartz.Trigger;
+import org.quartz.Trigger.TriggerState;
+import org.quartz.TriggerKey;
+import org.quartz.examples.example2.SimpleJob;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -250,6 +260,7 @@ public class QuartzServerManager {
 		JSONArray requestJsonArray = JSONArray.fromObject(requestStr);
 		
 		JobInfo jobInfo = new JobInfo();
+		List<? extends Trigger> triggerList;
 		for(int i=0; i<requestJsonArray.size(); i++){
 			JSONObject jsonObject = requestJsonArray.getJSONObject(i);
 						
@@ -260,7 +271,28 @@ public class QuartzServerManager {
 			if(!flag){
 				return false;
 			}
+						
+			
+		    triggerList = quartzServiceImpl.getTriggersOfJob(jsonObject.getString("jobName"), jsonObject.getString("jobGroup"));
+		    Trigger trigger = triggerList.get(0);
+			if((trigger instanceof SimpleTrigger)){
+				TriggerState triggerState = null;
+				TriggerKey triggerKey = trigger.getKey();
+				try {
+					triggerState = quartzServiceImpl.getTheScheduler().getTriggerState(triggerKey);
+				} catch (SchedulerException e) {
+					e.printStackTrace();
+				}
+				if(triggerState.equals(TriggerState.COMPLETE)){
+					try {
+						quartzServiceImpl.getTheScheduler().unscheduleJob(triggerKey);
+					} catch (SchedulerException e) {
+						e.printStackTrace();
+					}
+				}
+			}
 		}
+		
 		return true;
 	}
 	
@@ -301,7 +333,6 @@ public class QuartzServerManager {
 			sb.append(UUID.randomUUID().toString());
 			
 		    jobuuid = sb.toString();
-			//String jobuuid = String.valueOf(num) + "_" + UUID.randomUUID().toString();
 		    jobInfo.setJobGroup(jobuuid);
 		    jobInfo.setJobName(jobuuid);
 		    jobInfo.setJobClassName(jobClassName);
@@ -326,7 +357,6 @@ public class QuartzServerManager {
 		    sb.append(hour);
 		    sb.append(" * * ?");		    		    
 		    cronExpression = sb.toString();
-		    //String cronExpression = sec + " " + min + " " + hour + " " + "*" + " "  + "*" + " ?";
 		    
 		    TriggerInfo triggerInfo = new TriggerInfo();
 			triggerInfo.setTriggerGroup(jobuuid);
@@ -403,6 +433,24 @@ public class QuartzServerManager {
 		}
 		
 		return jobCounts;
+	}
+	
+	
+	@RequestMapping(value="/simpleTest",method = RequestMethod.GET)
+	public void simpleTest(HttpServletRequest request){
+		ServletContext servletContext = request.getServletContext(); 
+		QuartzService quartzServiceImpl = new QuartzServiceImpl(servletContext);
+		
+		Date startTime = DateBuilder.nextGivenSecondDate(null, 10);
+		JobDetail job = newJob(SimpleJob.class).withIdentity("job1", "group1").build();
+		SimpleTrigger trigger = (SimpleTrigger) newTrigger().withIdentity("trigger1", "group1").startAt(startTime).build();
+		
+		try {
+			quartzServiceImpl.getTheScheduler()
+			.scheduleJob(job, trigger);
+		} catch (SchedulerException e) {
+			e.printStackTrace();
+		}
 	}
 	
 }

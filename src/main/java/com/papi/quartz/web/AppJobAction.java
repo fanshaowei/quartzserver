@@ -76,7 +76,10 @@ public class AppJobAction {
     	jobDataMap.put("idFamily", idFamily);
     	jobDataMap.put("sourceScene",sourceScene.toString());
     	jobDataMap.put("doScene",doScene.toString()); 
-    	jobDataMap.put("validity", validity);
+    	jobDataMap.put("validity", validity);    	
+    	if(validity.equals("everyDay")){
+    		jobDataMap.put("sceneRelateJob_everyDayJob_Status", "正常");
+    	}
     	jobInfo.setJobDataMap(jobDataMap);
     	
     	//判断任务是否存在
@@ -352,9 +355,25 @@ public class AppJobAction {
     	
     	List<JobInfo> jobInfoList = quartzService.getJobsByGroupName(idFamily);
     	List<JobInfo> returnJobInfoList = new ArrayList<JobInfo>();
+    	JobDataMap jobDataMap ;
+    	String jobType_temp;
     	for(JobInfo jobInfo : jobInfoList){
-    		if(jobInfo.getJobDataMap().containsKey("jobType")){
-	    		if(jobInfo.getJobDataMap().getString("jobType").equals(jobType)){
+    		jobDataMap = jobInfo.getJobDataMap();
+    		if(jobDataMap.containsKey("jobType")){//是否存在任务类型    			
+    				
+    			jobType_temp = jobDataMap.getString("jobType");//获取任务类型
+    			
+	    		if(jobType_temp.equals(jobType)){//比较任务类型	    				    			
+	    			
+	    			if(jobType.equals("SceneRelateJob")){//如果是关联任务，加一个标识，用来判断 everyDay 没有触发器的情况
+	    				if(!jobDataMap.containsKey("sceneRelateJob_everyDayJob_Status") && jobDataMap.getString("validity").equals("everyDay")){
+		    				jobDataMap.put("sceneRelateJob_everyDayJob_Status", "正常");
+		    				jobInfo.setStatus(jobDataMap.getString("sceneRelateJob_everyDayJob_Status"));
+		    			}else if(jobDataMap.containsKey("sceneRelateJob_everyDayJob_Status") && jobDataMap.getString("validity").equals("everyDay")){
+		    				jobInfo.setStatus(jobDataMap.getString("sceneRelateJob_everyDayJob_Status"));
+		    			}	    					    				
+	    			}
+	    			
 	    			returnJobInfoList.add(jobInfo);
 	    		}
     		}	
@@ -405,6 +424,9 @@ public class AppJobAction {
     	jobDataMap.put("sourceScene",sourceScene.toString());
     	jobDataMap.put("doScene",doScene.toString());  
     	jobDataMap.put("validity", validity);
+    	if(validity.equals("everyDay")){
+    		jobDataMap.put("sceneRelateJob_everyDayJob_Status", "正常");
+    	}
     	jobInfo.setJobDataMap(jobDataMap);    	    
     	//更改任务信息
     	boolean addJobFlag = quartzService.addNewJob(jobInfo);
@@ -669,6 +691,17 @@ public class AppJobAction {
 			} catch (Exception e) {
 				ReturnBean.ReturnBeanToString("fail", "暂停任务失败", null);
 			}
+    		
+    		if(jobDataMap_temp.getString("validity").equals("everyDay")){
+    			jobDataMap_temp.put("sceneRelateJob_everyDayJob_Status", "暂停");
+        		
+        		jobInfo.setJobClassName(QuartzJobs.SceneRelateJob.getClazz());
+        		jobInfo.setJobDataMap(jobDataMap_temp);
+        		jobInfo.setJobGroup(idFamily);
+        		jobInfo.setJobName(jobName);
+        		quartzService.addNewJob(jobInfo);
+    		}
+    		
     	}    	
     	
     	return ReturnBean.ReturnBeanToString("succeed", "暂停任务成功", null);    	
@@ -719,8 +752,19 @@ public class AppJobAction {
     				this.senseDeviceSceneRelateService.update(senseDeviceSceneRelate);
 				}
 			} catch (Exception e) {
-				ReturnBean.ReturnBeanToString("fail", "暂停任务失败", null);
+				ReturnBean.ReturnBeanToString("fail", "启动任务失败", null);
 			}
+    		
+    		if(jobDataMap_temp.getString("validity").equals("everyDay")){
+    			jobDataMap_temp.put("sceneRelateJob_everyDayJob_Status", "正常");
+        		
+        		jobInfo.setJobClassName(QuartzJobs.SceneRelateJob.getClazz());
+        		jobInfo.setJobDataMap(jobDataMap_temp);
+        		jobInfo.setJobGroup(idFamily);
+        		jobInfo.setJobName(jobName);
+        		quartzService.addNewJob(jobInfo);
+    		}
+    		
     	}
     	
     	return ReturnBean.ReturnBeanToString("succeed", "启动任务成功", null);
