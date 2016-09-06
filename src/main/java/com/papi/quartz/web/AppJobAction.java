@@ -29,6 +29,7 @@ import com.papi.quartz.bean.SenseDeviceSceneRelate;
 import com.papi.quartz.bean.TriggerInfo;
 import com.papi.quartz.enums.QuartzJobs;
 import com.papi.quartz.service.QuartzService;
+import com.papi.quartz.service.QutzJobFiredDetailsService;
 import com.papi.quartz.service.SenseDeviceSceneRelateService;
 import com.papi.quartz.service.impl.QuartzServiceImpl;
 import com.papi.quartz.utils.CommonUtils;
@@ -40,7 +41,10 @@ public class AppJobAction {
     private QuartzService quartzService;
     
     @Resource
-    SenseDeviceSceneRelateService senseDeviceSceneRelateService;    
+    SenseDeviceSceneRelateService senseDeviceSceneRelateService; 
+    
+    @Resource
+	private QutzJobFiredDetailsService qutzJobFiredDetailsService;
     
     /**
      * 添加情景关联任务
@@ -361,11 +365,11 @@ public class AppJobAction {
     		jobDataMap = jobInfo.getJobDataMap();
     		if(jobDataMap.containsKey("jobType")){//是否存在任务类型    			
     				
-    			jobType_temp = jobDataMap.getString("jobType");//获取任务类型
+    			jobType_temp = jobDataMap.getString("jobType");//获取原任务类型
     			
-	    		if(jobType_temp.equals(jobType)){//比较任务类型	    				    			
+	    		if(jobType_temp.equals(jobType)){//比较请求的任务类型 和 原任务的类型	    				    			
 	    			
-	    			if(jobType.equals("SceneRelateJob")){//如果是关联任务，加一个标识，用来判断 everyDay 没有触发器的情况
+	    			if(jobType.equals("SceneRelateJob")){//如果是关联任务，加一个标识，用来判断 关联任务执行的有效时间是 everyDay ,没有触发器的情况
 	    				if(!jobDataMap.containsKey("sceneRelateJob_everyDayJob_Status") && jobDataMap.getString("validity").equals("everyDay")){
 		    				jobDataMap.put("sceneRelateJob_everyDayJob_Status", "正常");
 		    				jobInfo.setStatus(jobDataMap.getString("sceneRelateJob_everyDayJob_Status"));
@@ -682,6 +686,7 @@ public class AppJobAction {
     		Map<String,Object> map = new HashMap<String,Object>();    		
     		map.put("idDevice", sourceScene.getString("idDevice"));
     		map.put("idFamily", idFamily);
+    		map.put("jobName", jobName);
     		try {
     			List<SenseDeviceSceneRelate> senseDeviceSceneRelates = this.senseDeviceSceneRelateService.find(map);
     			for (SenseDeviceSceneRelate senseDeviceSceneRelate : senseDeviceSceneRelates) {
@@ -745,6 +750,7 @@ public class AppJobAction {
     		Map<String,Object> map = new HashMap<String,Object>();    		
     		map.put("idDevice", sourceScene.getString("idDevice"));
     		map.put("idFamily", idFamily);
+    		map.put("jobName", jobName);
     		try {
     			List<SenseDeviceSceneRelate> senseDeviceSceneRelates = this.senseDeviceSceneRelateService.find(map);
     			for (SenseDeviceSceneRelate senseDeviceSceneRelate : senseDeviceSceneRelates) {
@@ -798,7 +804,7 @@ public class AppJobAction {
     	JobDataMap jobDataMap_temp = quartzService.getJobDataMap(jobName, idFamily);
     	String jobType = jobDataMap_temp.getString("jobType");
     	
-    	//当删除任务类型为自定义时在关联表中删除
+    	//当删除任务类型为 情景关联任务 时，在关联表中删除情景关联信息
     	if(jobType.equals("SceneRelateJob")){
     		SenseDeviceSceneRelate senseDeviceSceneRelate = new SenseDeviceSceneRelate();
 			JSONObject sourceScene = JSONObject.fromObject(jobDataMap_temp.getString("sourceScene"));
@@ -808,14 +814,27 @@ public class AppJobAction {
 				senseDeviceSceneRelate.setIdDevice("0");
 			}			
 			senseDeviceSceneRelate.setJobName(jobName);
+			senseDeviceSceneRelate.setIdFamily(Integer.parseInt(idFamily));
     		try {	
-    			this.senseDeviceSceneRelateService.deleteById(senseDeviceSceneRelate);
+    			this.senseDeviceSceneRelateService.deleteSenseDeviceSceneRelate(senseDeviceSceneRelate);
     		} catch (Exception e) {
     			e.printStackTrace();
-    			return ReturnBean.ReturnBeanToString("fail","删除任务失败",null);
+    			return ReturnBean.ReturnBeanToString("fail","删除情景关联任务 关联信息 失败",null);
     		}	
     	}
     	
+    	//删除任务日志
+    	Map<String,Object> paramMap = new HashMap<String, Object>();
+    	paramMap.put("jobName", jobName);
+		paramMap.put("jobGroup", idFamily);
+		try {
+			qutzJobFiredDetailsService.deleteQutzJobFiredDetails(paramMap);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ReturnBean.ReturnBeanToString("fail","删除任务日志 失败",null);
+		}
+    	
+    	//删除任务记录
     	if(quartzService.isJobExsit(jobName, idFamily)){
     		boolean flag = quartzService.deleteJob(jobInfo);
         	if(!flag){

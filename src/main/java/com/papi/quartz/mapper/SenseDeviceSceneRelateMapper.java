@@ -10,7 +10,7 @@ public interface SenseDeviceSceneRelateMapper {
 	
     public Integer insert(SenseDeviceSceneRelate senseDeviceSceneRelate) throws Exception;
     
-    public Integer deleteById(SenseDeviceSceneRelate senseDeviceSceneRelate) throws Exception;
+    public Integer delete(SenseDeviceSceneRelate senseDeviceSceneRelate) throws Exception;
     
     public Integer update(SenseDeviceSceneRelate senseDeviceSceneRelate) throws Exception;
 }

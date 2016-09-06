@@ -35,10 +35,10 @@ public class SenseDeviceSceneRelateServiceImpl implements SenseDeviceSceneRelate
 	}
 
 	@Override
-	public Integer deleteById(SenseDeviceSceneRelate senseDeviceSceneRelate)
+	public Integer deleteSenseDeviceSceneRelate(SenseDeviceSceneRelate senseDeviceSceneRelate)
 			throws Exception {
 		
-		return senseDeviceSceneRelateMapper.deleteById(senseDeviceSceneRelate);
+		return senseDeviceSceneRelateMapper.delete(senseDeviceSceneRelate);
 	}
 	
 }

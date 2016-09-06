@@ -342,7 +342,7 @@ public class QuartzServerManager {
 		    	return false;
 		    }		   
 		    
-		    calendar.add(Calendar.SECOND, 10);		    
+		    calendar.add(Calendar.SECOND, 20);		    
 		    sec = Integer.toString(calendar.get(Calendar.SECOND));
 		    min = Integer.toString(calendar.get(Calendar.MINUTE));
 		    hour = Integer.toString(calendar.get(Calendar.HOUR_OF_DAY));
