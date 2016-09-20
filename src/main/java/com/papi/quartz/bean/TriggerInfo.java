@@ -38,14 +38,16 @@ public class TriggerInfo implements Serializable{
 	  private String cronExpression = "0 0 0 * * ?";
 	  
 /*	  private String dailyTime = "00:00:00";//*****/
-	  private String dailyStartTime = "2000-01-01";
-	  private String dailyEndTime = "2100-01-01";
+	  private String dailyStartTime = "2000-01-01 00:00:00";
+	  private String dailyEndTime = "2500-01-01 23:59:59";
 	  private String startTimeOfDay = "00:00:00"; //每天开始的时间  （格式  时：分：秒）
 	  private String endTimeOfDay = "23:59:59";   //每天结束的时间
 /*	  private String dailyIntervalTime;*/
 	  private String[] dayOfWeek = {"everyDay"};	  	
 	  
-	 	  
+	  private String nextFireTime;
+	  private String previousFireTime;
+	  
 	public String getTriggerType() {
 		return triggerType;
 	}
@@ -237,6 +239,22 @@ public class TriggerInfo implements Serializable{
 
 	public void setJobDataMap(JobDataMap jobDataMap) {
 		this.jobDataMap = jobDataMap;
+	}
+
+	public String getNextFireTime() {
+		return nextFireTime;
+	}
+
+	public void setNextFireTime(String nextFireTime) {
+		this.nextFireTime = nextFireTime;
+	}
+
+	public String getPreviousFireTime() {
+		return previousFireTime;
+	}
+
+	public void setPreviousFireTime(String previousFireTime) {
+		this.previousFireTime = previousFireTime;
 	} 
 	  	
 }

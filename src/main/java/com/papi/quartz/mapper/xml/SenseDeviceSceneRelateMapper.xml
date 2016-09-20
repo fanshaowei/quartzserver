@@ -3,6 +3,7 @@
 <mapper namespace="com.papi.quartz.mapper.SenseDeviceSceneRelateMapper">
     <resultMap type="com.papi.quartz.bean.SenseDeviceSceneRelate" id="rs_SenseDeviceSceneRelate">
         <result property="id" column="id" javaType="java.lang.Integer" jdbcType="INTEGER"/>
+        <result property="jobName" column="jobName" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="idFamily" column="id_family" javaType="java.lang.Integer" jdbcType="INTEGER"/>
         <result property="idGateway" column="id_gateway" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="idDevice" column="id_device" javaType="java.lang.String" jdbcType="VARCHAR"/>
@@ -12,28 +13,31 @@
 
     <select id="listByBean" parameterType= "java.util.Map" resultMap = "rs_SenseDeviceSceneRelate">
         SELECT 
-            id,id_family,id_gateway,id_device,sceneJson,isValid
+            id,jobName,id_family,id_gateway,id_device,sceneJson,isValid
         FROM sense_device_scene_relate
         WHERE
         <trim prefixOverrides="and | or">
-            <if test="idFamily != null and idFamily != 0">
+            <if test="jobName != null">
+                AND jobName = #{jobName}
+            </if>
+            <if test="idFamily != null ">
                 AND id_family =  #{idFamily}
             </if>
             <if test= "idGateway != null">
                 AND id_gateway = #{idGateway}
             </if>
             <if test="idDevice != null">
-                AND id_device = #{idDevice}
-                
+                AND id_device = #{idDevice}                
             </if>
         </trim>    
     </select>
 
     <insert id="insert" parameterType="com.papi.quartz.bean.SenseDeviceSceneRelate">
         INSERT INTO sense_device_scene_relate
-        (id_family,id_gateway,id_device,sceneJson,isValid) values
+        (id_family,id_gateway,jobName,id_device,sceneJson,isValid) values
         (#{idFamily},
          #{idGateway},
+         #{jobName},         
          #{idDevice},
          #{sceneJson},
          #{isValid})
@@ -42,42 +46,55 @@
          </selectKey>
     </insert>
     
-    <delete id="deleteById" parameterType="com.papi.quartz.bean.SenseDeviceSceneRelate">
+    <delete id="delete" parameterType="com.papi.quartz.bean.SenseDeviceSceneRelate">
         DELETE FROM sense_device_scene_relate
-        <where>
-            <if test="id != null and id != 0">
-                id = #{id}
+        WHERE
+        <trim prefixOverrides="and | or">
+            <if test="id != null and id != 0 ">
+            AND id = #{id}
+            </if>
+            <if test="jobName != null">
+            AND jobName=#{jobName}
             </if>
             <if test="idDevice != null">
-                id_device = #{idDevice}
+            AND id_device = #{idDevice}
             </if>
-        </where>
+            <if test="idFamily != null ">
+	        AND id_family= #{idFamily}
+	        </if>
+        </trim>
     </delete>
     
     <update id="update" parameterType="com.papi.quartz.bean.SenseDeviceSceneRelate">
         UPDATE sense_device_scene_relate 
-        <set>
+        <set>            
+	        <if test="idGateway != null">
+	        id_gateway= #{idGateway}, 
+	        </if> 
+            <if test="idDevice != null">
+            id_device = #{idDevice},    
+            </if>
             <if test="sceneJson != null" >
             sceneJson = #{sceneJson},
             </if>
             <if test="isValid != null">
             isValid = #{isValid}
-            </if>
+            </if>            
         </set>
         WHERE
         <trim prefixOverrides="and | or">
-            <if test="id != 0">
+        	<if test="id != null">
             AND id = #{id}
+            </if>
+            <!-- <if test="jobName != null">
+            AND jobName=#{jobName}
             </if>
 	        <if test="idFamily != null and idFamily != 0">
 	        AND id_family= #{idFamily}
 	        </if>
 	        <if test="idGateway != null">
 	        AND id_gateway= #{idGateway} 
-	        </if>
-	        <if test="idDevice !=null">
-	        AND id_device= #{idDevice}
-	        </if>	       
+	        </if> -->	        	     
         </trim>
     </update>
 </mapper>

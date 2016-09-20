@@ -1,32 +1,24 @@
 package com.papi.quartz.quartzjobs;
 
-import java.util.Date;
-
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.JobKey;
+import org.quartz.TriggerKey;
 
-public class HelloJob extends BasicJob
-{
-	  public void execute(JobExecutionContext context)
-	    throws JobExecutionException
-	  {
-	    JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
-	    System.out.println("Hello World ! " + new Date());
+public class HelloJob extends BasicJob{
 
-	    if (jobDataMap.getString("result") != null) {
-	      if (jobDataMap.getString("result").equals("WOW"))
-	      {
-	        context.getJobDetail().getJobDataMap()
-	          .put("JOB_RESULT", "成功");
-	      }
-	      else {
-	        context.getJobDetail().getJobDataMap()
-	          .put("JOB_RESULT", "失败");
-	      }
-	    }
-	    else
-	      context.getJobDetail().getJobDataMap()
-	        .put("JOB_RESULT", "失败");
-	  }
+	@Override
+	public void execute(JobExecutionContext jobExecutionContext)
+			throws JobExecutionException {
+		JobDataMap jobDataMap = jobExecutionContext.getJobDetail().getJobDataMap();
+		
+		JobKey jobKey = jobExecutionContext.getJobDetail().getKey();
+		String jobGroup = jobKey.getGroup();
+		String jobName = jobKey.getName();		
+		TriggerKey triggerKey = jobExecutionContext.getTrigger().getKey();
+		
+		jobDataMap.put("jobResult", "执行成功");
+	}
+    
 }

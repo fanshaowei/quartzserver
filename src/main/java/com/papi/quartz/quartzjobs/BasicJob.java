@@ -11,6 +11,6 @@ import org.quartz.PersistJobDataAfterExecution;
 public abstract class BasicJob implements Job {
 	public void execute(JobExecutionContext jobExecutionContext)
 			throws JobExecutionException {
-				
+			
 	}
 }

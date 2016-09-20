@@ -107,3 +107,26 @@
 .icon-large-chart{
 	background:url('icons/large_chart.png') no-repeat center center;
 }
+.icon-edit-delete{
+	background:url('icons/edit_delete.png') no-repeat center center;
+}
+.icon-edit-modify{
+	background:url('icons/edit_modify.png') no-repeat center center;
+}
+.icon-configure{
+	background:url('icons/configure.png') no-repeat center center;
+}
+.icon-start{
+	background:url('icons/start.png') no-repeat center center;
+}
+.icon-stop{
+	background:url('icons/stop.png') no-repeat center center;
+}
+
+.icon-dept{
+	background:url('icons/dept.png') no-repeat center center;
+}
+
+.icon-recordlist{
+	background:url('icons/recordlist.png') no-repeat center center;
+}

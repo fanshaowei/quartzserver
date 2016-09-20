@@ -16,6 +16,7 @@ public class AppRequestJobInfo implements Serializable {
 	 */
 	private static final long serialVersionUID = -7092479545958787696L;
 
+	private String idGateway;
 	private String idFamily;
 	private String req_token;
 	private String userName;
@@ -35,14 +36,23 @@ public class AppRequestJobInfo implements Serializable {
 	private String[] simpletDateArray;
 	private boolean isRepeatTrigger;
 	private int repeatCount = -1;
-	private int repeatInterval;
-	private String repeatIntervalUnit;
+	private int repeatInterval = 24;
+	private String repeatIntervalUnit="HOUR";
 
-	private String dailyStartTime = "2000-01-01";// 可加时间也可不加：2000-01-01 00:00:00
-	private String dailyEndTime = "2500-01-01";
+	private String dailyStartTime = "2000-01-01 00:00:00";// 可加时间也可不加：2000-01-01 00:00:00
+	private String dailyEndTime = "2500-01-01 23:59:59";
 	private String dailyTimeArray[];
-	private String[] timeOfDayArray;
+	private String[] timeOfDayArray = {"00:00:00","23:59:59"};
 	private String[] dayOfWeek;
+
+	
+	public String getIdGateway() {
+		return idGateway;
+	}
+
+	public void setIdGateway(String idGateway) {
+		this.idGateway = idGateway;
+	}
 
 	public String getIdFamily() {
 		return idFamily;

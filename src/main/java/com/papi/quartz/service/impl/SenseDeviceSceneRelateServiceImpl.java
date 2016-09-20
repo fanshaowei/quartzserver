@@ -15,8 +15,7 @@ import com.papi.quartz.service.SenseDeviceSceneRelateService;
 public class SenseDeviceSceneRelateServiceImpl implements SenseDeviceSceneRelateService{
     @Resource
     SenseDeviceSceneRelateMapper senseDeviceSceneRelateMapper;
-		
-        
+	        
 	@Override
 	public List<SenseDeviceSceneRelate> find(Map<String,Object> map) throws Exception {
 		
@@ -36,10 +35,10 @@ public class SenseDeviceSceneRelateServiceImpl implements SenseDeviceSceneRelate
 	}
 
 	@Override
-	public Integer deleteById(SenseDeviceSceneRelate senseDeviceSceneRelate)
+	public Integer deleteSenseDeviceSceneRelate(SenseDeviceSceneRelate senseDeviceSceneRelate)
 			throws Exception {
-		// TODO Auto-generated method stub
-		return senseDeviceSceneRelateMapper.deleteById(senseDeviceSceneRelate);
+		
+		return senseDeviceSceneRelateMapper.delete(senseDeviceSceneRelate);
 	}
 	
 }

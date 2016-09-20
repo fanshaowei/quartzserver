@@ -29,6 +29,7 @@ import com.papi.quartz.bean.SenseDeviceSceneRelate;
 import com.papi.quartz.bean.TriggerInfo;
 import com.papi.quartz.enums.QuartzJobs;
 import com.papi.quartz.service.QuartzService;
+import com.papi.quartz.service.QutzJobFiredDetailsService;
 import com.papi.quartz.service.SenseDeviceSceneRelateService;
 import com.papi.quartz.service.impl.QuartzServiceImpl;
 import com.papi.quartz.utils.CommonUtils;
@@ -40,7 +41,10 @@ public class AppJobAction {
     private QuartzService quartzService;
     
     @Resource
-    SenseDeviceSceneRelateService senseDeviceSceneRelateService;    
+    SenseDeviceSceneRelateService senseDeviceSceneRelateService; 
+    
+    @Resource
+	private QutzJobFiredDetailsService qutzJobFiredDetailsService;
     
     /**
      * 添加情景关联任务
@@ -57,6 +61,7 @@ public class AppJobAction {
     			(AppRequestJobInfo)JSONObject.toBean(JSONObject.fromObject(repuestStr), AppRequestJobInfo.class);
     	
     	JobInfo jobInfo = new JobInfo();
+    	String idGateway = appRequestJobInfo.getIdGateway();
     	String idFamily = appRequestJobInfo.getIdFamily();
     	String jobName = appRequestJobInfo.getJobName();
     	JSONObject sourceScene = JSONObject.fromObject(appRequestJobInfo.getSourceScene());
@@ -75,7 +80,10 @@ public class AppJobAction {
     	jobDataMap.put("idFamily", idFamily);
     	jobDataMap.put("sourceScene",sourceScene.toString());
     	jobDataMap.put("doScene",doScene.toString()); 
-    	jobDataMap.put("validity", validity);
+    	jobDataMap.put("validity", validity);    	
+    	if(validity.equals("everyDay")){
+    		jobDataMap.put("sceneRelateJob_everyDayJob_Status", "正常");
+    	}
     	jobInfo.setJobDataMap(jobDataMap);
     	
     	//判断任务是否存在
@@ -129,17 +137,18 @@ public class AppJobAction {
                 	}
             	}            	
         	} //end for
-    	}    	    	
-		
+    	}    	    			
 		
     	//保存关联任务到数据库
     	SenseDeviceSceneRelate senseDeviceSceneRelate = new SenseDeviceSceneRelate();
     	senseDeviceSceneRelate.setIdFamily(Integer.parseInt(idFamily));
-    	//senseDeviceSceneRelate.setIdGateway(sourceScene.);
+    	senseDeviceSceneRelate.setIdGateway(idGateway);
+    	senseDeviceSceneRelate.setJobName(jobName);
     	senseDeviceSceneRelate.setIdDevice(sourceScene.getString("idDevice"));
     	
     	JSONObject sceneJson = new JSONObject();
     	sceneJson.accumulate("doScene", doScene);
+    	sceneJson.accumulate("username", appRequestJobInfo.getUserName());
     	
     	senseDeviceSceneRelate.setSceneJson(sceneJson.toString());
     	senseDeviceSceneRelate.setIsValid("1");
@@ -214,12 +223,12 @@ public class AppJobAction {
     		triggerInfo.setRepeatInterval(appRequestJobInfo.getRepeatInterval());
     		triggerInfo.setRepeatIntervalUnit(appRequestJobInfo.getRepeatIntervalUnit());
     		triggerInfo.setDayOfWeek(appRequestJobInfo.getDayOfWeek());
-    		
+    		//触发器的有效日期
     		if(appRequestJobInfo.getDailyTimeArray()!=null && appRequestJobInfo.getDailyTimeArray().length>1){
     			triggerInfo.setDailyStartTime(appRequestJobInfo.getDailyTimeArray()[0]);
     			triggerInfo.setDailyEndTime(appRequestJobInfo.getDailyTimeArray()[1]);
     		}
-    		
+    		//触发器的执行有效时间点/有效见时间段
     		triggerInfo.setStartTimeOfDay(appRequestJobInfo.getTimeOfDayArray()[0]);
     		if(appRequestJobInfo.getTimeOfDayArray().length>1){
     			triggerInfo.setEndTimeOfDay(appRequestJobInfo.getTimeOfDayArray()[1]);
@@ -350,10 +359,28 @@ public class AppJobAction {
     	
     	List<JobInfo> jobInfoList = quartzService.getJobsByGroupName(idFamily);
     	List<JobInfo> returnJobInfoList = new ArrayList<JobInfo>();
+    	JobDataMap jobDataMap ;
+    	String jobType_temp;
     	for(JobInfo jobInfo : jobInfoList){
-    		if(jobInfo.getJobDataMap().getString("jobType").equals(jobType)){
-    			returnJobInfoList.add(jobInfo);
-    		}
+    		jobDataMap = jobInfo.getJobDataMap();
+    		if(jobDataMap.containsKey("jobType")){//是否存在任务类型    			
+    				
+    			jobType_temp = jobDataMap.getString("jobType");//获取原任务类型
+    			
+	    		if(jobType_temp.equals(jobType)){//比较请求的任务类型 和 原任务的类型	    				    			
+	    			
+	    			if(jobType.equals("SceneRelateJob")){//如果是关联任务，加一个标识，用来判断 关联任务执行的有效时间是 everyDay ,没有触发器的情况
+	    				if(!jobDataMap.containsKey("sceneRelateJob_everyDayJob_Status") && jobDataMap.getString("validity").equals("everyDay")){
+		    				jobDataMap.put("sceneRelateJob_everyDayJob_Status", "正常");
+		    				jobInfo.setStatus(jobDataMap.getString("sceneRelateJob_everyDayJob_Status"));
+		    			}else if(jobDataMap.containsKey("sceneRelateJob_everyDayJob_Status") && jobDataMap.getString("validity").equals("everyDay")){
+		    				jobInfo.setStatus(jobDataMap.getString("sceneRelateJob_everyDayJob_Status"));
+		    			}	    					    				
+	    			}
+	    			
+	    			returnJobInfoList.add(jobInfo);
+	    		}
+    		}	
     	}    	 	
     	
     	return returnJobInfoList;
@@ -375,11 +402,13 @@ public class AppJobAction {
     			(AppRequestJobInfo)JSONObject.toBean(JSONObject.fromObject(repuestStr), AppRequestJobInfo.class);
     	
     	String idFamily= appRequestJobInfo.getIdFamily();
+    	String idGateway = appRequestJobInfo.getIdGateway();
     	String jobName =  appRequestJobInfo.getJobName();
     	
     	//获取原来job的dataMap    
-    	JobDataMap jobDataMap_temp = quartzService.getJobDataMap(jobName, idFamily);
-    	String validity_temp = jobDataMap_temp.getString("validity");
+    	JobDataMap jobDataMap_old = quartzService.getJobDataMap(jobName, idFamily);
+    	String validity_old = jobDataMap_old.getString("validity");
+    	String idDevice_old = JSONObject.fromObject(jobDataMap_old.get("sourceScene")).getString("idDevice");
     	
     	//设置要更改的job的新信息
     	JSONObject sourceScene = JSONObject.fromObject(appRequestJobInfo.getSourceScene());
@@ -399,6 +428,9 @@ public class AppJobAction {
     	jobDataMap.put("sourceScene",sourceScene.toString());
     	jobDataMap.put("doScene",doScene.toString());  
     	jobDataMap.put("validity", validity);
+    	if(validity.equals("everyDay")){
+    		jobDataMap.put("sceneRelateJob_everyDayJob_Status", "正常");
+    	}
     	jobInfo.setJobDataMap(jobDataMap);    	    
     	//更改任务信息
     	boolean addJobFlag = quartzService.addNewJob(jobInfo);
@@ -412,7 +444,7 @@ public class AppJobAction {
     	}
     	
     	//更改触发器(validity取值 everyDay时，为关联任务每天都有效，因此不加触发器去控制关联任务的有效时间段)
-    	if(validity_temp.equals("everyDay")){
+    	if(validity_old.equals("everyDay")){
     		if(validity.equals("custom")){
     			TriggerInfo triggerInfo = new TriggerInfo();        	        	    	
         		triggerInfo.setTriggerGroup(idFamily);
@@ -446,26 +478,11 @@ public class AppJobAction {
                     	}
                 	}            	
             	} //end for
-        		
-        		//编辑触发器后添加关联数据
-        		SenseDeviceSceneRelate senseDeviceSceneRelate = new SenseDeviceSceneRelate();
-    	    	senseDeviceSceneRelate.setIdFamily(Integer.parseInt(idFamily));    	    	
-    	    	senseDeviceSceneRelate.setIdDevice(sourceScene.getString("idDevice"));    	    	    	    	
-    	    	senseDeviceSceneRelate.setIsValid("1"); 
-    	    	JSONObject sceneJson = new JSONObject();
-    	    	sceneJson.accumulate("doScene", doScene);
-    	    	senseDeviceSceneRelate.setSceneJson(sceneJson.toString());
-    	    	try {
-					this.senseDeviceSceneRelateService.add(senseDeviceSceneRelate);
-				} catch (Exception e) {
-					e.printStackTrace();
-					
-					return  ReturnBean.ReturnBeanToString("fail", "更新情景关联数据表数据状态失败", null);
-				}
+        		        		
     		}
     	}//end if
     	
-    	if(validity_temp.equals("custom")){
+    	if(validity_old.equals("custom")){
     		if(validity.equals("custom")){
     			TriggerInfo triggerInfo = new TriggerInfo();        	        	
     			triggerInfo.setTriggerGroup(idFamily);
@@ -499,20 +516,6 @@ public class AppJobAction {
     	        	}
     			}//end for
 
-    			//更改关联任务状态为1，执行关联
-    			SenseDeviceSceneRelate senseDeviceSceneRelate = new SenseDeviceSceneRelate();
-    	    	senseDeviceSceneRelate.setIdFamily(Integer.parseInt(idFamily));    	    	
-    	    	senseDeviceSceneRelate.setIdDevice(sourceScene.getString("idDevice"));    	    	    	    	
-    	    	senseDeviceSceneRelate.setIsValid("1");
-    	    	JSONObject sceneJson = new JSONObject();
-    	    	sceneJson.accumulate("doScene", doScene);
-    	    	senseDeviceSceneRelate.setSceneJson(sceneJson.toString());
-    	    	try {
-					this.senseDeviceSceneRelateService.update(senseDeviceSceneRelate);
-				} catch (Exception e) {
-					e.printStackTrace();
-					return  ReturnBean.ReturnBeanToString("fail", "更新情景关联数据表数据状态失败", null);
-				}
     		}else if(validity.equals("everyDay")){
     			TriggerInfo triggerInfo = new TriggerInfo();        	        	
     			triggerInfo.setTriggerGroup(idFamily);    			
@@ -522,18 +525,43 @@ public class AppJobAction {
     				String name = triggerList.get(i).getKey().getName();
     				triggerInfo.setTriggerName(name);
     				quartzService.deleteTrigger(triggerInfo);
-    			}
-    			//删除关联表
-    			SenseDeviceSceneRelate senseDeviceSceneRelate = new SenseDeviceSceneRelate();
-    			senseDeviceSceneRelate.setIdDevice(sourceScene.getString("idDevice"));
-        		try {	
-        			this.senseDeviceSceneRelateService.deleteById(senseDeviceSceneRelate);
-        		} catch (Exception e) {
-        			e.printStackTrace();
-        			return ReturnBean.ReturnBeanToString("fail","更新数据状态失败",null);
-        		}
+    			}    			
     		}//end else if
     	}
+    	
+    	int idParam = 0;
+    	Map<String,Object> mapParam = new HashMap<String,Object>();
+    	mapParam.put("idFamily", idFamily);
+    	mapParam.put("idDevice", idDevice_old);
+    	mapParam.put("jobName", jobName);
+    	try {
+			List<SenseDeviceSceneRelate> senseDeviceSceneRelateList = senseDeviceSceneRelateService.find(mapParam);
+			if(senseDeviceSceneRelateList != null && senseDeviceSceneRelateList.size()>0){
+				idParam = senseDeviceSceneRelateList.get(0).getId();
+			}			
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+    	
+		//更改关联任务状态为1，执行关联
+		SenseDeviceSceneRelate senseDeviceSceneRelate = new SenseDeviceSceneRelate();
+		senseDeviceSceneRelate.setId(idParam);
+    	//senseDeviceSceneRelate.setIdFamily(Integer.parseInt(idFamily));  
+    	senseDeviceSceneRelate.setIdGateway(idGateway);
+    	senseDeviceSceneRelate.setIdDevice(sourceScene.getString("idDevice"));    	    	    	    	
+    	senseDeviceSceneRelate.setIsValid("1");    	    
+    	
+    	JSONObject sceneJson = new JSONObject();
+    	sceneJson.accumulate("doScene", doScene);
+    	sceneJson.accumulate("username", appRequestJobInfo.getUserName());
+    	
+    	senseDeviceSceneRelate.setSceneJson(sceneJson.toString());
+    	try {
+			this.senseDeviceSceneRelateService.update(senseDeviceSceneRelate);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return  ReturnBean.ReturnBeanToString("fail", "更新情景关联数据表数据状态失败", null);
+		}
     	      		 	
     	return  ReturnBean.ReturnBeanToString("succeed","成功更新情景关联任务",null);
     }
@@ -587,16 +615,27 @@ public class AppJobAction {
 		triggerInfo.setRepeatInterval(appRequestJobInfo.getRepeatInterval());//***
 		triggerInfo.setRepeatIntervalUnit(appRequestJobInfo.getRepeatIntervalUnit());//***
 		triggerInfo.setDayOfWeek(appRequestJobInfo.getDayOfWeek());//***
-		triggerInfo.setDailyStartTime(appRequestJobInfo.getDailyTimeArray()[0]);
-		triggerInfo.setDailyEndTime(appRequestJobInfo.getDailyTimeArray()[1]);
-		triggerInfo.setStartTimeOfDay(appRequestJobInfo.getTimeOfDayArray()[0]);//***
-		triggerInfo.setEndTimeOfDay(appRequestJobInfo.getTimeOfDayArray()[1]);    	
+
+		//触发器的有效日期
+		if(appRequestJobInfo.getDailyTimeArray()!=null && appRequestJobInfo.getDailyTimeArray().length>1){
+			triggerInfo.setDailyStartTime(appRequestJobInfo.getDailyTimeArray()[0]);
+			triggerInfo.setDailyEndTime(appRequestJobInfo.getDailyTimeArray()[1]);
+		}
+
+        //触发器的执行有效时间点/有效见时间段
+		triggerInfo.setStartTimeOfDay(appRequestJobInfo.getTimeOfDayArray()[0]);//***		
+		if(appRequestJobInfo.getTimeOfDayArray().length>1){
+			triggerInfo.setEndTimeOfDay(appRequestJobInfo.getTimeOfDayArray()[1]);	
+		}		   
 		
 		List<? extends Trigger> triggerList = quartzService.getTriggersOfJob(jobName, idFamily);
-		String name = triggerList.get(0).getKey().getName();
-		
-		triggerInfo.setTriggerName(name);
-		
+		if(triggerList != null && triggerList.size() >= 0){
+			String name = triggerList.get(0).getKey().getName();			
+			triggerInfo.setTriggerName(name);	
+		}else{
+			return ReturnBean.ReturnBeanToString("fail", "更新的任务没有触发器", null);
+		}
+				
 		boolean editTriggerInfo = quartzService.editTrigger(jobInfo, triggerInfo);
     	if(!editTriggerInfo){
     		Map<String,String> map = new HashMap<String,String>();
@@ -638,13 +677,16 @@ public class AppJobAction {
     	}else{
     		return ReturnBean.ReturnBeanToString("fail", "暂停的任务不存在", null);
     	}
+    	
     	JobDataMap jobDataMap_temp = quartzService.getJobDataMap(jobName, idFamily);
-    	String validity_temp = jobDataMap_temp.getString("validity");
-    	if(validity_temp!=null && validity_temp.equals("custom")){
-    		
-    		JSONObject sourceScene = JSONObject.fromObject(appRequestJobInfo.getSourceScene());
-    		Map<String,Object> map = new HashMap<String,Object>();
+    	String jobType = jobDataMap_temp.getString("jobType");
+    	
+    	if(jobType.equals("SceneRelateJob")){    		
+    		JSONObject sourceScene = JSONObject.fromObject(jobDataMap_temp.getString("sourceScene"));
+    		Map<String,Object> map = new HashMap<String,Object>();    		
     		map.put("idDevice", sourceScene.getString("idDevice"));
+    		map.put("idFamily", idFamily);
+    		map.put("jobName", jobName);
     		try {
     			List<SenseDeviceSceneRelate> senseDeviceSceneRelates = this.senseDeviceSceneRelateService.find(map);
     			for (SenseDeviceSceneRelate senseDeviceSceneRelate : senseDeviceSceneRelates) {
@@ -654,8 +696,18 @@ public class AppJobAction {
 			} catch (Exception e) {
 				ReturnBean.ReturnBeanToString("fail", "暂停任务失败", null);
 			}
-    	}
-    	
+    		
+    		if(jobDataMap_temp.getString("validity").equals("everyDay")){
+    			jobDataMap_temp.put("sceneRelateJob_everyDayJob_Status", "暂停");
+        		
+        		jobInfo.setJobClassName(QuartzJobs.SceneRelateJob.getClazz());
+        		jobInfo.setJobDataMap(jobDataMap_temp);
+        		jobInfo.setJobGroup(idFamily);
+        		jobInfo.setJobName(jobName);
+        		quartzService.addNewJob(jobInfo);
+    		}
+    		
+    	}    	
     	
     	return ReturnBean.ReturnBeanToString("succeed", "暂停任务成功", null);    	
     }
@@ -691,11 +743,14 @@ public class AppJobAction {
     	}
     	
     	JobDataMap jobDataMap_temp = quartzService.getJobDataMap(jobName, idFamily);
-    	String validity_temp = jobDataMap_temp.getString("validity");
-    	if(validity_temp!=null && validity_temp.equals("custom")){
-    		JSONObject sourceScene = JSONObject.fromObject(appRequestJobInfo.getSourceScene());
-    		Map<String,Object> map = new HashMap<String,Object>();
+    	String jobType = jobDataMap_temp.getString("jobType");
+    	
+    	if(jobType.equals("SceneRelateJob")){    		
+    		JSONObject sourceScene = JSONObject.fromObject(jobDataMap_temp.getString("sourceScene"));
+    		Map<String,Object> map = new HashMap<String,Object>();    		
     		map.put("idDevice", sourceScene.getString("idDevice"));
+    		map.put("idFamily", idFamily);
+    		map.put("jobName", jobName);
     		try {
     			List<SenseDeviceSceneRelate> senseDeviceSceneRelates = this.senseDeviceSceneRelateService.find(map);
     			for (SenseDeviceSceneRelate senseDeviceSceneRelate : senseDeviceSceneRelates) {
@@ -705,6 +760,17 @@ public class AppJobAction {
 			} catch (Exception e) {
 				ReturnBean.ReturnBeanToString("fail", "启动任务失败", null);
 			}
+    		
+    		if(jobDataMap_temp.getString("validity").equals("everyDay")){
+    			jobDataMap_temp.put("sceneRelateJob_everyDayJob_Status", "正常");
+        		
+        		jobInfo.setJobClassName(QuartzJobs.SceneRelateJob.getClazz());
+        		jobInfo.setJobDataMap(jobDataMap_temp);
+        		jobInfo.setJobGroup(idFamily);
+        		jobInfo.setJobName(jobName);
+        		quartzService.addNewJob(jobInfo);
+    		}
+    		
     	}
     	
     	return ReturnBean.ReturnBeanToString("succeed", "启动任务成功", null);
@@ -733,23 +799,42 @@ public class AppJobAction {
     	JobInfo jobInfo = new JobInfo();
     	jobInfo.setJobGroup(idFamily);
     	jobInfo.setJobName(jobName);
-    	
+    	    	         	
     	//获取原来job的dataMap       	
     	JobDataMap jobDataMap_temp = quartzService.getJobDataMap(jobName, idFamily);
-    	String validity_temp = jobDataMap_temp.getString("validity");
-    	//当删除任务类型为自定义时在关联表中删除
-    	if(validity_temp!=null && validity_temp.equals("custom")){
+    	String jobType = jobDataMap_temp.getString("jobType");
+    	
+    	//当删除任务类型为 情景关联任务 时，在关联表中删除情景关联信息
+    	if(jobType.equals("SceneRelateJob")){
     		SenseDeviceSceneRelate senseDeviceSceneRelate = new SenseDeviceSceneRelate();
-			JSONObject sourceScene = JSONObject.fromObject(appRequestJobInfo.getSourceScene());
-			senseDeviceSceneRelate.setIdDevice(sourceScene.getString("idDevice"));
+			JSONObject sourceScene = JSONObject.fromObject(jobDataMap_temp.getString("sourceScene"));
+			if(sourceScene != null && sourceScene.size() > 0){
+				senseDeviceSceneRelate.setIdDevice(sourceScene.getString("idDevice"));	
+			}else{
+				senseDeviceSceneRelate.setIdDevice("0");
+			}			
+			senseDeviceSceneRelate.setJobName(jobName);
+			senseDeviceSceneRelate.setIdFamily(Integer.parseInt(idFamily));
     		try {	
-    			this.senseDeviceSceneRelateService.deleteById(senseDeviceSceneRelate);
+    			this.senseDeviceSceneRelateService.deleteSenseDeviceSceneRelate(senseDeviceSceneRelate);
     		} catch (Exception e) {
     			e.printStackTrace();
-    			return ReturnBean.ReturnBeanToString("fail","删除任务失败",null);
+    			return ReturnBean.ReturnBeanToString("fail","删除情景关联任务 关联信息 失败",null);
     		}	
     	}
     	
+    	//删除任务日志
+    	Map<String,Object> paramMap = new HashMap<String, Object>();
+    	paramMap.put("jobName", jobName);
+		paramMap.put("jobGroup", idFamily);
+		try {
+			qutzJobFiredDetailsService.deleteQutzJobFiredDetails(paramMap);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ReturnBean.ReturnBeanToString("fail","删除任务日志 失败",null);
+		}
+    	
+    	//删除任务记录
     	if(quartzService.isJobExsit(jobName, idFamily)){
     		boolean flag = quartzService.deleteJob(jobInfo);
         	if(!flag){
@@ -757,8 +842,8 @@ public class AppJobAction {
         	}
     	}else{
     		return ReturnBean.ReturnBeanToString("fail", "删除任务不存在", null);
-    	} 
-    	   	
+    	}
+    
 		return ReturnBean.ReturnBeanToString("succeed", "删除任务成功", null);    	
     }
     

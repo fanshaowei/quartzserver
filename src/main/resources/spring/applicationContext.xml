@@ -14,23 +14,75 @@
 		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.2.xsd
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd">
      
-    <context:property-placeholder location="classpath:jdbc.properties,classpath:redis.properties"/>			
+    <context:property-placeholder location="classpath:jdbc.properties,classpath:redis.properties,classpath:quartzServerConfig.properties"/>			
 	
+	<!-- 加载自定的配置 -->
+	<bean id="quartzServerConfig" class = "com.papi.quartz.commons.QuartzServerConfig">
+	    <property name="smarthomeSenseUrl" value="${SmarthomeSense.url}"></property>
+	</bean>
+			
 	<!--配置数据源  -->
-	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
-         <property name="user" value="${jdbc.username}"></property>
-         <property name="password" value="${jdbc.password}"></property>
-         <property name="driverClass" value="${jdbc.driver}"></property>
-         <property name="jdbcUrl" value="${jdbc.url}"></property>
-         <property name="minPoolSize" value="${jdbc.minPoolSize}"></property>
-         <property name="maxPoolSize" value="${jdbc.maxPoolSize}"></property>
-         <property name="initialPoolSize" value="${jdbc.initialPoolSize}"></property>
-         <!-- <property name="maxIdleTime" value="${jdbc.maxIdleTime}"></property> -->
-         <!-- <property name="automaticTestTable" value="${jdbc.automaticTestTable}"></property> -->
-         <!-- <property name="preferredTestQuery" value="${jdbc.preferredTestQuery}"></property> -->
-         <property name="idleConnectionTestPeriod" value="${jdbc.idleConnectionTestPeriod}"></property>
-         <property name="acquireIncrement" value="${jdbc.acquireIncrement}"></property>
-         <property name="acquireRetryAttempts" value="${jdbc.acquireRetryAttempts}"></property>            
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+        <property name="user" value="${jdbc.username}"></property>
+        <property name="password" value="${jdbc.password}"></property>
+        <property name="driverClass" value="${jdbc.driver}"></property>
+        <property name="jdbcUrl" value="${jdbc.url}"></property>
+        		<!-- 连接池中保留的最小连接数 最小链接数 -->
+		<property name="minPoolSize">
+			<value>1</value>
+		</property>
+		<!--连接池中保留的最大连接数 最大连接数 -->
+		<property name="maxPoolSize">
+			<value>4</value>
+		</property>
+		<!-- 最大空闲的时间，单位是秒，无用的链接再过时后会被回收 -->
+		<property name="maxIdleTime">
+			<value>1800</value>
+		</property>
+		<!-- 在当前连接数耗尽的时候，一次获取的新的连接数 -->
+		<property name="acquireIncrement">
+			<value>1</value>
+		</property>
+		<!--JDBC的标准参数，用以控制数据源内加载的PreparedStatements数量。但由于预缓存的statements 属于单个connection而不是整个连接池。所以设置这个参数需要考虑到多方面的因素。 
+			如果maxStatements与maxStatementsPerConnection均为0，则缓存被关闭。Default: 0 -->
+		<property name="maxStatements">
+			<value>0</value>
+		</property>
+		<!-- 连接池初始化时获取的链接数，介于minPoolSize和maxPoolSize之间 -->
+		<property name="initialPoolSize">
+			<value>1</value>
+		</property>
+		<!--每1分钟检查所有连接池中的空闲连接。Default: 0 -->
+		<property name="idleConnectionTestPeriod">
+			<value>60</value>
+		</property>
+		<!--定义在从数据库获取新连接失败后重复尝试的次数。Default: 30 -->
+		<property name="acquireRetryAttempts">
+			<value>30</value>
+		</property>
+		<!-- #每100ms尝试一次 -->
+		<property name="acquireRetryDelay">
+			<value>100</value>
+		</property>
+		<!--获取连接失败将会引起所有等待连接池来获取连接的线程抛出异常。但是数据源仍有效 保留，并在下次调用getConnection()的时候继续尝试获取连接。如果设为true，那么在尝试 
+			获取连接失败后该数据源将申明已断开并永久关闭。Default: false -->
+		<property name="breakAfterAcquireFailure">
+			<value>false</value>
+		</property>
+		<!-- 防止长时间闲置而导致被mysql断开 因性能消耗大请只在需要的时候使用它。如果设为true那么在每个connection提交的 时候都将校验其有效性。建议使用idleConnectionTestPeriod或automaticTestTable 
+			等方法来提升连接测试的性能。Default: false -->
+		<property name="testConnectionOnCheckout">
+			<value>false</value>
+		</property>
+		<!--如果设为true那么在取得连接的同时将校验连接的有效性。Default: false -->
+		<property name="testConnectionOnCheckin">
+			<value>true</value>
+		</property>
+		<!--定义所有连接测试都执行的测试语句。在使用连接测试的情况下这个一显著提高测试速度。注意： 测试的表必须在初始数据源的时候就存在。Default: 
+			null -->
+		<property name="preferredTestQuery">
+			<value>select 1 from dual</value>
+		</property>                             
     </bean>
     
     <!-- 配置Jdbc模板 -->

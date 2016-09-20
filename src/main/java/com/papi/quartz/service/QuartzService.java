@@ -1,6 +1,5 @@
 package com.papi.quartz.service;
 
-import java.io.Serializable;
 import java.util.List;
 
 import org.quartz.JobDataMap;
@@ -10,12 +9,14 @@ import org.quartz.Trigger;
 import com.papi.quartz.bean.JobInfo;
 import com.papi.quartz.bean.TriggerInfo;
 
-public abstract interface QuartzService extends Serializable{
+public abstract interface QuartzService {
 	public Scheduler getTheScheduler();
 	
     public abstract boolean addNewJob(JobInfo jobInfo); 
     
     public abstract List<JobInfo> getAllJobs();
+    
+    public List<JobInfo> getAllJobDetails();
     
     public abstract List<JobInfo> getJobsByGroupName(String groupName);
     

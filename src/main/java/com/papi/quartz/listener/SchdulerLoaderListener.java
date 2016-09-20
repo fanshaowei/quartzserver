@@ -35,9 +35,10 @@ public class SchdulerLoaderListener implements ServletContextListener
 	    try {
 	      if (scheduler.isStarted())
 	        scheduler.shutdown(true);
+	        logger.info("--------------------关闭任务调试容器成功------------------");
 	    }
 	    catch (SchedulerException e) {
-	      logger.error("关闭任务调度失败", e);
+	      logger.error("---------------------关闭任务调度失败---------------------", e);
 	    }
 	  }
 
@@ -125,13 +126,16 @@ public class SchdulerLoaderListener implements ServletContextListener
 	    
 	    properties.setProperty("org.quartz.dataSource.myDS.maxConnections", 
 	      config.getProperty("org.quartz.dataSource.myDS.maxConnections") == null ? "30" : config.getProperty("org.quartz.dataSource.myDS.maxConnections"));
-	 
-	   /* properties.setProperty("org.quartz.jobListener.CustomJobListener.class", 
-	      config.getProperty("org.quartz.jobListener.CustomJobListener.class") == null ? "com.papi.quartz.listener.CustomJobListener" : config.getProperty("com.papi.quartz.listener.CustomJobListener.class"));
+	   //
+	    properties.setProperty("org.quartz.dataSource.myDS.validationQuery", "select 1 from dual");
+	    //properties.setProperty("org.quartz.dataSource.myDS.idleConnectionValidationSeconds", "60");
+	   // 
+	    properties.setProperty("org.quartz.jobListener.CustomJobListener.class", 
+	      config.getProperty("org.quartz.jobListener.CustomJobListener.class") == null ? "com.papi.quartz.listener.CustomJobListener" : config.getProperty("org.quartz.jobListener.CustomJobListener.class"));
 	    
 	    properties.setProperty("org.quartz.jobListener.CustomJobListener.name", 
 	      config.getProperty("org.quartz.jobListener.CustomJobListener.name") == null ? "CustomJobListener" : config.getProperty("org.quartz.jobListener.CustomJobListener.name"));
-*/
+
 	    return properties;
 	  }
 }

@@ -13,6 +13,7 @@ public class SenseDeviceSceneRelate implements Serializable{
 	 */
 	private static final long serialVersionUID = -9183592486596846278L;
 	private int id;
+	private String jobName;
     private int idFamily;
     private String idGateway;
     private String idDevice;
@@ -23,6 +24,13 @@ public class SenseDeviceSceneRelate implements Serializable{
 	}
 	public void setId(int id) {
 		this.id = id;
+	}
+	
+	public String getJobName() {
+		return jobName;
+	}
+	public void setJobName(String jobName) {
+		this.jobName = jobName;
 	}
 	public int getIdFamily() {
 		return idFamily;
