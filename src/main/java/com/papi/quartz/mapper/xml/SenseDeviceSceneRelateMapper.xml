@@ -67,7 +67,10 @@
     
     <update id="update" parameterType="com.papi.quartz.bean.SenseDeviceSceneRelate">
         UPDATE sense_device_scene_relate 
-        <set>
+        <set>            
+	        <if test="idGateway != null">
+	        id_gateway= #{idGateway}, 
+	        </if> 
             <if test="idDevice != null">
             id_device = #{idDevice},    
             </if>
@@ -80,15 +83,18 @@
         </set>
         WHERE
         <trim prefixOverrides="and | or">
-            <if test="jobName != null">
+        	<if test="id != null">
+            AND id = #{id}
+            </if>
+            <!-- <if test="jobName != null">
             AND jobName=#{jobName}
             </if>
-	        <if test="idFamily != null ">
+	        <if test="idFamily != null and idFamily != 0">
 	        AND id_family= #{idFamily}
 	        </if>
 	        <if test="idGateway != null">
 	        AND id_gateway= #{idGateway} 
-	        </if>	        	     
+	        </if> -->	        	     
         </trim>
     </update>
 </mapper>

@@ -546,7 +546,7 @@ public class AppJobAction {
 		//更改关联任务状态为1，执行关联
 		SenseDeviceSceneRelate senseDeviceSceneRelate = new SenseDeviceSceneRelate();
 		senseDeviceSceneRelate.setId(idParam);
-    	senseDeviceSceneRelate.setIdFamily(Integer.parseInt(idFamily));  
+    	//senseDeviceSceneRelate.setIdFamily(Integer.parseInt(idFamily));  
     	senseDeviceSceneRelate.setIdGateway(idGateway);
     	senseDeviceSceneRelate.setIdDevice(sourceScene.getString("idDevice"));    	    	    	    	
     	senseDeviceSceneRelate.setIsValid("1");    	    

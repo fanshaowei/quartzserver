@@ -31,7 +31,7 @@ public class SceneRelateJob extends BasicJob{
 		} catch (SchedulerException e) {		
 			e.printStackTrace();
 		}		
-				
+		String jobName = jobExecutionContext.getJobDetail().getKey().getName();		
 		
 		JobDataMap jobDataMap = jobExecutionContext.getJobDetail().getJobDataMap();
 		String sourceScene = jobDataMap.getString("sourceScene");
@@ -46,6 +46,7 @@ public class SceneRelateJob extends BasicJob{
 		Map<String,Object> mapParam = new HashMap<String,Object>();
 		mapParam.put("idFamily", idFamily);
 		mapParam.put("idDevice", idDevice);
+		mapParam.put("jobName", jobName);
 		
 		try {
 			List<SenseDeviceSceneRelate> senseDeviceSceneRelateList = senseDeviceSceneRelateService.find(mapParam);
