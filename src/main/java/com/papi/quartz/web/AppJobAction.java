@@ -67,6 +67,7 @@ public class AppJobAction {
     	JSONObject sourceScene = JSONObject.fromObject(appRequestJobInfo.getSourceScene());
     	JSONArray doScene = JSONArray.fromObject(appRequestJobInfo.getDoScene());
     	String validity = appRequestJobInfo.getValidity();
+    	boolean isBetweenConfigTime = appRequestJobInfo.getIsBetweenConfigTime();
     	
     	//用家庭id来做任务组名
     	jobInfo.setJobGroup(idFamily);
@@ -151,8 +152,12 @@ public class AppJobAction {
     	sceneJson.accumulate("username", appRequestJobInfo.getUserName());
     	
     	senseDeviceSceneRelate.setSceneJson(sceneJson.toString());
-    	senseDeviceSceneRelate.setIsValid("1");
-    	
+    	if(isBetweenConfigTime){
+    		senseDeviceSceneRelate.setIsValid("1");
+    	} else {
+    		senseDeviceSceneRelate.setIsValid("0");
+    	}
+    		    	
     	try {
 			this.senseDeviceSceneRelateService.add(senseDeviceSceneRelate);
 		} catch (Exception e) {
@@ -404,6 +409,7 @@ public class AppJobAction {
     	String idFamily= appRequestJobInfo.getIdFamily();
     	String idGateway = appRequestJobInfo.getIdGateway();
     	String jobName =  appRequestJobInfo.getJobName();
+    	boolean isBetweenConfigTime = appRequestJobInfo.getIsBetweenConfigTime();
     	
     	//获取原来job的dataMap    
     	JobDataMap jobDataMap_old = quartzService.getJobDataMap(jobName, idFamily);
@@ -548,8 +554,13 @@ public class AppJobAction {
 		senseDeviceSceneRelate.setId(idParam);
     	//senseDeviceSceneRelate.setIdFamily(Integer.parseInt(idFamily));  
     	senseDeviceSceneRelate.setIdGateway(idGateway);
-    	senseDeviceSceneRelate.setIdDevice(sourceScene.getString("idDevice"));    	    	    	    	
-    	senseDeviceSceneRelate.setIsValid("1");    	    
+    	senseDeviceSceneRelate.setIdDevice(sourceScene.getString("idDevice")); 
+    	
+    	if(isBetweenConfigTime){
+    		senseDeviceSceneRelate.setIsValid("1");
+    	} else {
+    		senseDeviceSceneRelate.setIsValid("0");
+    	}    	    	    
     	
     	JSONObject sceneJson = new JSONObject();
     	sceneJson.accumulate("doScene", doScene);

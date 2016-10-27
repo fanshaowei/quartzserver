@@ -62,7 +62,7 @@ public class SchdulerLoaderListener implements ServletContextListener
 	      e.printStackTrace();
 	    }
 	  }
-
+	  
 	  private static Properties getProperties(ServletContext servletContext)
 	  {
 	    Properties properties = new Properties();
@@ -85,6 +85,9 @@ public class SchdulerLoaderListener implements ServletContextListener
 	    properties.setProperty("org.quartz.threadPool.class", 
 	      config.getProperty("org.quartz.threadPool.class") == null ? "org.quartz.simpl.SimpleThreadPool" : config.getProperty("org.quartz.threadPool.class"));
 
+	    properties.setProperty("org.quartz.threadPool.makeThreadsDaemons", 
+	  	      config.getProperty("org.quartz.threadPool.makeThreadsDaemons") == null ? "false" : config.getProperty("org.quartz.threadPool.makeThreadsDaemons"));	  	    
+	    
 	    properties.setProperty("org.quartz.threadPool.threadCount", 
 	      config.getProperty("org.quartz.threadPool.threadCount") == null ? "30" : config.getProperty("org.quartz.threadPool.threadCount"));
 
@@ -112,6 +115,9 @@ public class SchdulerLoaderListener implements ServletContextListener
 	    properties.setProperty("org.quartz.jobStore.isClustered", 
 	      config.getProperty("org.quartz.jobStore.isClustered") == null ? "false" : config.getProperty("org.quartz.jobStore.isClustered"));
 	    
+	    properties.setProperty("org.quartz.jobStore.clusterCheckinInterval", 
+	  	      config.getProperty("org.quartz.jobStore.clusterCheckinInterval") == null ? "60000" : config.getProperty("org.quartz.jobStore.clusterCheckinInterval"));
+	    
 	    properties.setProperty("org.quartz.dataSource.myDS.driver", 
 	      config.getProperty("org.quartz.dataSource.myDS.driver") == null ? config.getProperty("jdbc.driver") : config.getProperty("org.quartz.dataSource.myDS.driver"));
 	    
@@ -126,16 +132,15 @@ public class SchdulerLoaderListener implements ServletContextListener
 	    
 	    properties.setProperty("org.quartz.dataSource.myDS.maxConnections", 
 	      config.getProperty("org.quartz.dataSource.myDS.maxConnections") == null ? "30" : config.getProperty("org.quartz.dataSource.myDS.maxConnections"));
-	   //
+	   
 	    properties.setProperty("org.quartz.dataSource.myDS.validationQuery", "select 1 from dual");
-	    //properties.setProperty("org.quartz.dataSource.myDS.idleConnectionValidationSeconds", "60");
-	   // 
-	    properties.setProperty("org.quartz.jobListener.CustomJobListener.class", 
+
+/*	    properties.setProperty("org.quartz.jobListener.CustomJobListener.class", 
 	      config.getProperty("org.quartz.jobListener.CustomJobListener.class") == null ? "com.papi.quartz.listener.CustomJobListener" : config.getProperty("org.quartz.jobListener.CustomJobListener.class"));
 	    
 	    properties.setProperty("org.quartz.jobListener.CustomJobListener.name", 
 	      config.getProperty("org.quartz.jobListener.CustomJobListener.name") == null ? "CustomJobListener" : config.getProperty("org.quartz.jobListener.CustomJobListener.name"));
-
+*/
 	    return properties;
 	  }
 }

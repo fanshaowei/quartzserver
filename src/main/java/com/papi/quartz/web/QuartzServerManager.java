@@ -2,6 +2,7 @@ package com.papi.quartz.web;
 
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
+import static org.quartz.CronScheduleBuilder.cronSchedule;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -9,7 +10,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -22,6 +22,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
+import org.quartz.CronTrigger;
 import org.quartz.DateBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
@@ -30,7 +31,6 @@ import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
 import org.quartz.Trigger.TriggerState;
 import org.quartz.TriggerKey;
-import org.quartz.examples.example2.SimpleJob;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,16 +38,14 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import sun.nio.cs.UnicodeEncoder;
-
 import com.papi.quartz.bean.JobInfo;
 import com.papi.quartz.bean.QutzJobFiredDetails;
 import com.papi.quartz.bean.TriggerInfo;
+import com.papi.quartz.quartzjobs.HelloJob;
 import com.papi.quartz.service.QuartzService;
 import com.papi.quartz.service.QutzJobFiredDetailsService;
 import com.papi.quartz.service.impl.QuartzServiceImpl;
 import com.papi.quartz.utils.CommonUtils;
-import com.papi.quartz.utils.DateUtils;
 
 @Controller
 @RequestMapping("/quartzServerManager")
@@ -301,7 +299,7 @@ public class QuartzServerManager {
 	 * @param request
 	 * @return
 	 */
-	@RequestMapping(value="/batchAddJobs",method = RequestMethod.POST)
+	//@RequestMapping(value="/batchAddJobs",method = RequestMethod.POST)
 	public @ResponseBody boolean batchAddJobs(HttpServletRequest request){
 		ServletContext servletContext = request.getServletContext(); 
 		QuartzService quartzServiceImpl = new QuartzServiceImpl(servletContext);			
@@ -371,6 +369,38 @@ public class QuartzServerManager {
 		return true;
 	}	
 	
+	
+	@RequestMapping(value="/batchAddJobs",method = RequestMethod.POST)
+	public @ResponseBody boolean simpleTest(HttpServletRequest request){
+		
+		ServletContext servletContext = request.getServletContext(); 
+		QuartzService quartzServiceImpl = new QuartzServiceImpl(servletContext);
+		
+		String requestStr = CommonUtils.reqtoString(request);
+		JSONObject requestJson = JSONObject.fromObject(requestStr);	
+		Integer jobCnt = requestJson.getInt("jobCnt");		
+		String batchCronExpress = requestJson.getString("batchCronExpress");
+        
+		for(int i=0; i<jobCnt; i++){
+			JobDetail job = newJob(HelloJob.class).withIdentity("job"+ String.valueOf(i), "group"+String.valueOf(i))
+					.build();
+			CronTrigger trigger =  newTrigger().withIdentity("trigger"+String.valueOf(i), "group"+String.valueOf(i))
+					.withSchedule(cronSchedule(batchCronExpress))
+					.build();
+			
+			try {
+				quartzServiceImpl.getTheScheduler()
+				.scheduleJob(job, trigger);							
+			} catch (SchedulerException e) {				
+				e.printStackTrace();
+				return false;
+			}
+		}
+		
+		return true;
+		
+	}
+	
 	/**
 	 * 获取任务执行日志
 	 * @param jobName
@@ -433,24 +463,6 @@ public class QuartzServerManager {
 		}
 		
 		return jobCounts;
-	}
-	
-	
-	@RequestMapping(value="/simpleTest",method = RequestMethod.GET)
-	public void simpleTest(HttpServletRequest request){
-		ServletContext servletContext = request.getServletContext(); 
-		QuartzService quartzServiceImpl = new QuartzServiceImpl(servletContext);
-		
-		Date startTime = DateBuilder.nextGivenSecondDate(null, 10);
-		JobDetail job = newJob(SimpleJob.class).withIdentity("job1", "group1").build();
-		SimpleTrigger trigger = (SimpleTrigger) newTrigger().withIdentity("trigger1", "group1").startAt(startTime).build();
-		
-		try {
-			quartzServiceImpl.getTheScheduler()
-			.scheduleJob(job, trigger);
-		} catch (SchedulerException e) {
-			e.printStackTrace();
-		}
 	}
 	
 }

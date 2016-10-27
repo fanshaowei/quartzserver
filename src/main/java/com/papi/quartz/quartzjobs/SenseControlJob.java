@@ -77,8 +77,8 @@ public class SenseControlJob extends BasicJob{
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 		//设置请求方式及连接超时时间							
 		HttpGet httpGet = new HttpGet(sceneUrl);
-		RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(5000)
-				.setConnectTimeout(5000)
+		RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(60 * 1000)
+				.setConnectTimeout(60 * 1000)
 				.build();
 		httpGet.setConfig(requestConfig);
 		//发送请求
