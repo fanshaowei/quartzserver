@@ -13,12 +13,31 @@
 		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.2.xsd
 		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.2.xsd
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd">
-     
-    <context:property-placeholder location="classpath:jdbc.properties,classpath:redis.properties,classpath:quartzServerConfig.properties"/>			
+    
+    <!--加载properties文件  --> 
+    <context:property-placeholder 
+    	location="classpath:jdbc.properties,classpath:redis.properties,
+    		classpath:quartzServerConfig.properties,classpath:netty.properties"/>			
 	
-	<!-- 加载自定的配置 -->
-	<bean id="quartzServerConfig" class = "com.papi.quartz.commons.QuartzServerConfig">
+	<!-- 加载自定义的配置 -->
+	<bean id="quartzServerConfig" class = "com.papi.quartz.commons.config.QuartzServerConfig">
 	    <property name="smarthomeSenseUrl" value="${SmarthomeSense.url}"></property>
+	</bean>
+	
+	<bean id="quartzFrameConfig" class="com.papi.quartz.commons.config.QuartzFrameConfig">
+		<property name="instanceName" value="${org.quartz.scheduler.instanceName}"></property>
+		<property name="instanceId" value="${org.quartz.scheduler.instanceId}"></property>
+		<property name="threadPoolClass" value="${org.quartz.threadPool.class}"></property>
+		<property name="makeThreadsDaemons" value="${org.quartz.threadPool.makeThreadsDaemons}"></property>
+		<property name="threadCount" value="${org.quartz.threadPool.threadCount}"></property>
+		<property name="threadPriority" value="${org.quartz.threadPool.threadPriority}"></property>
+		<property name="misfireThreshold" value="${org.quartz.jobStore.misfireThreshold}"></property>
+		<property name="jobStoreClass" value="${org.quartz.jobStore.class}"></property>
+	</bean>
+	
+	<bean id="nettyConfig" class = "com.papi.quartz.commons.config.NettyConfig">
+	    <property name="host" value="${netty.host}"></property>
+	    <property name="port" value="${netty.port}"></property>
 	</bean>
 			
 	<!--配置数据源  -->

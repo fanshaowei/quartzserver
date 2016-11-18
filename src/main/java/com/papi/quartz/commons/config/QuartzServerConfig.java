@@ -1,10 +1,13 @@
-package com.papi.quartz.commons;
+package com.papi.quartz.commons.config;
 
-import java.io.Serializable;
-
-public class QuartzServerConfig implements Serializable{
+/**
+ * 
+ * @author fanshaowei
+ *
+ **该类通过spring注入，读取quartzServerConfig.properties的配置
+ */
+public class QuartzServerConfig {
 	
-	private static final long serialVersionUID = 1013293050850281467L;
 	private String smarthomeSenseUrl;
     
 	public QuartzServerConfig() {	

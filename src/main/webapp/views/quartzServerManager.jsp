@@ -52,8 +52,8 @@
     }
     
     
-    #batchAddJobFrom .easyui-numberbox{
-        width: 100px;
+    #batchAddJobFrom .easyui-numberbox,.easyui-textbox{
+        width: 120px;
     }
     #batchAddJobFrom > div{
         margin-top: 15px;
@@ -175,7 +175,11 @@
             <div>
                  <label for="jobCnt">任务数:</label>
                  <input id="jobCnt" class="easyui-numberbox" type="text" name="jobCnt" data-options="required:true" />              
-            </div>		     
+            </div>		
+            <div>
+                 <label for="batch-cronExpress">cron表达式:</label>
+                 <input id="batch-cronExpress" class="easyui-textbox" type="text" name="batch-cronExpress" data-options="required:true" />              
+            </div>     
         </form>
     </div>
     

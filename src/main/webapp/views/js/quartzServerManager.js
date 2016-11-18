@@ -542,10 +542,12 @@ quartzServerManager.batchAddJobs =  function(){
 			iconCls:'icon-ok',
 			handler:function(){
 				var jobCnt = $("#jobCnt").numberbox("getValue");
+				var batchCronExpress = $("#batch-cronExpress").textbox('getValue');
 				var jobClassName = "com.papi.quartz.quartzjobs.HelloJob";
 				
 				var str= {
 					"jobCnt":jobCnt,
+					"batchCronExpress":batchCronExpress,
 					"jobClassName":jobClassName
 				};
 				

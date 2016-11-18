@@ -1,8 +1,8 @@
 package com.papi.quartz.enums;
 
 public enum JobActionUrl {
-    SCENE_CONTROL("/dailyTriggerScene?username=:username&idScene=:idScene");
-    
+    //SCENE_CONTROL("/dailyTriggerScene?username=:username&idScene=:idScene");
+    SCENE_CONTROL("/sceneControl?username=:username&reqToken=:reqToken&idScene=:idScene");
     private String url;
     private JobActionUrl(String url){
     	this.url = url;

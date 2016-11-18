@@ -20,6 +20,7 @@ public class AppRequestJobInfo implements Serializable {
 	private String idFamily;
 	private String req_token;
 	private String userName;
+	private boolean isBetweenConfigTime;//当前时间是否在设置时间范围内 标识
 
 	private String jobName; // 任务名
 	private String jobState; // 任务状态
@@ -76,6 +77,14 @@ public class AppRequestJobInfo implements Serializable {
 
 	public void setUserName(String userName) {
 		this.userName = userName;
+	}		
+
+	public boolean getIsBetweenConfigTime() {
+		return isBetweenConfigTime;
+	}
+
+	public void setIsBetweenConfigTime(boolean isBetweenConfigTime) {
+		this.isBetweenConfigTime = isBetweenConfigTime;
 	}
 
 	public String getJobName() {
