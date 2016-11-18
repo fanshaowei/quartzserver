@@ -17,6 +17,12 @@ import org.springframework.context.ApplicationContext;
 import com.papi.quartz.bean.SenseDeviceSceneRelate;
 import com.papi.quartz.service.SenseDeviceSceneRelateService;
 
+/**
+ * 
+ * @author fanshaowei
+ * 
+ * 定时情景关联任务，用来定时开启情景关联任务的有效时间
+ */
 public class SceneRelateJob extends BasicJob{
     private Logger logger = Logger.getLogger(SceneRelateJob.class.getName());
 	

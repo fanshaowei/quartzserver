@@ -23,7 +23,6 @@ import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.quartz.CronTrigger;
-import org.quartz.DateBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
@@ -38,13 +37,15 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.papi.quartz.bean.AppRequestJobInfo;
 import com.papi.quartz.bean.JobInfo;
 import com.papi.quartz.bean.QutzJobFiredDetails;
+import com.papi.quartz.bean.ReturnBean;
 import com.papi.quartz.bean.TriggerInfo;
 import com.papi.quartz.quartzjobs.HelloJob;
 import com.papi.quartz.service.QuartzService;
 import com.papi.quartz.service.QutzJobFiredDetailsService;
-import com.papi.quartz.service.impl.QuartzServiceImpl;
+import com.papi.quartz.service.RedisUtilService;
 import com.papi.quartz.utils.CommonUtils;
 
 @Controller
@@ -53,21 +54,25 @@ public class QuartzServerManager {
 	private Logger logger = Logger.getLogger(QuartzServerManager.class.getName());
 	
 	@Resource
+    private QuartzService quartzService;
+	@Resource
 	private QutzJobFiredDetailsService qutzJobFiredDetailsService;
-	
+	@Resource
+	private RedisUtilService redisUtilService;
 	/**
 	 * 获取任务列表
 	 * @param request
 	 * @return
 	 */
 	@RequestMapping(value="/getAllJobDetails",method = RequestMethod.GET)
-	public @ResponseBody Map<String,Object> getAllJobDetails(HttpServletRequest request){		
+	public @ResponseBody Map<String,Object> getAllJobDetails(HttpServletRequest request){
+		ServletContext servletContext = request.getServletContext();     	        	      
+    	quartzService.quartzServiceImpl(servletContext);
+		
 		Map<String,Object> returnMap = new HashMap<String,Object>();
 		List<Map<String, Object>> mapList = new ArrayList<Map<String,Object>>();
 		
-		ServletContext servletContext = request.getServletContext(); 
-		QuartzService quartzServiceImpl = new QuartzServiceImpl(servletContext);
-		List<JobInfo> jobInfoList =  (List<JobInfo>) quartzServiceImpl.getAllJobs();
+		List<JobInfo> jobInfoList =  (List<JobInfo>) quartzService.getAllJobs();
 		
 		ArrayList<TriggerInfo> triggerInfoArr;
 		for(JobInfo jobInfo : jobInfoList){
@@ -110,10 +115,10 @@ public class QuartzServerManager {
 	 */
 	@RequestMapping(value="/editJobInfo",method = RequestMethod.POST)
 	public @ResponseBody boolean editJobInfo(HttpServletRequest request){
+		ServletContext servletContext = request.getServletContext();     	        	      
+    	quartzService.quartzServiceImpl(servletContext);
+    	
 		boolean flag = false;
-		
-		ServletContext servletContext = request.getServletContext(); 
-		QuartzService quartzServiceImpl = new QuartzServiceImpl(servletContext);
 		
 		String requestStr = CommonUtils.reqtoString(request);
 		JSONObject requestJson = JSONObject.fromObject(requestStr);
@@ -124,9 +129,9 @@ public class QuartzServerManager {
 		jobInfo.setJobDescription(requestJson.getString("jobDescription"));
 		jobInfo.setJobClassName(requestJson.getString("jobClassName"));
 				
-		boolean isJobExsit = quartzServiceImpl.isJobExsit(requestJson.getString("jobName"), requestJson.getString("jobGroup"));
+		boolean isJobExsit = quartzService.isJobExsit(requestJson.getString("jobName"), requestJson.getString("jobGroup"));
 		if(!isJobExsit){
-			flag = quartzServiceImpl.addNewJob(jobInfo);	
+			flag = quartzService.addNewJob(jobInfo);	
 		}				
 		
 		TriggerInfo triggerInfo = new TriggerInfo();
@@ -169,11 +174,11 @@ public class QuartzServerManager {
 		}
 		
 		
-		boolean istriggerExist = quartzServiceImpl.isTriggerExist(requestJson.getString("jobName"), requestJson.getString("jobGroup"));
+		boolean istriggerExist = quartzService.isTriggerExist(requestJson.getString("jobName"), requestJson.getString("jobGroup"));
 		if(isJobExsit && istriggerExist){
-			flag = quartzServiceImpl.editTrigger(jobInfo, triggerInfo);
+			flag = quartzService.editTrigger(jobInfo, triggerInfo);
 		}else{
-			flag = quartzServiceImpl.addTrigger(jobInfo, triggerInfo);
+			flag = quartzService.addTrigger(jobInfo, triggerInfo);
 		}				
 		
 		return flag;
@@ -186,8 +191,8 @@ public class QuartzServerManager {
 	 */
 	@RequestMapping(value="/deleteJobs",method = RequestMethod.POST)
 	public @ResponseBody boolean deleteJobs(HttpServletRequest request){
-		ServletContext servletContext = request.getServletContext(); 
-		QuartzService quartzServiceImpl = new QuartzServiceImpl(servletContext);
+		/*ServletContext servletContext = request.getServletContext();     	        	      
+    	quartzService.quartzServiceImpl(servletContext);
 		
 		String requestStr = CommonUtils.reqtoString(request);
 		JSONArray requestJsonArray = JSONArray.fromObject(requestStr);
@@ -199,8 +204,8 @@ public class QuartzServerManager {
 						
 			jobInfo.setJobGroup(jsonObject.getString("jobGroup"));
 			jobInfo.setJobName(jsonObject.getString("jobName"));
-			
-			boolean flag = quartzServiceImpl.deleteJob(jobInfo);
+						
+			boolean flag = quartzService.deleteJob(jobInfo);
 			if(!flag){
 				return false;
 			}
@@ -209,10 +214,21 @@ public class QuartzServerManager {
 			paramMap.put("jobGroup", jsonObject.getString("jobGroup"));
 			try {
 				qutzJobFiredDetailsService.deleteQutzJobFiredDetails(paramMap);
+				
+				//redisUtilService.delKey("QuartzTest" + String.valueOf(i));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+		}*/
+		
+		try {
+			Set<JobKey> jobkey = quartzService.getTheScheduler().getJobKeys(GroupMatcher.jobGroupStartsWith("group"));
+			List<JobKey> list = new ArrayList<JobKey>(jobkey);
+			quartzService.getTheScheduler().deleteJobs(list);
+		} catch (SchedulerException e) {
+			e.printStackTrace();
 		}
+		
 		return true;
 	}
 	
@@ -223,8 +239,8 @@ public class QuartzServerManager {
 	 */
 	@RequestMapping(value="/pauseJobs",method = RequestMethod.POST)
 	public @ResponseBody boolean pauseJobs(HttpServletRequest request){
-		ServletContext servletContext = request.getServletContext(); 
-		QuartzService quartzServiceImpl = new QuartzServiceImpl(servletContext);
+		ServletContext servletContext = request.getServletContext();     	        	      
+    	quartzService.quartzServiceImpl(servletContext);
 		
 		String requestStr = CommonUtils.reqtoString(request);
 		JSONArray requestJsonArray = JSONArray.fromObject(requestStr);
@@ -236,7 +252,7 @@ public class QuartzServerManager {
 			jobInfo.setJobGroup(jsonObject.getString("jobGroup"));
 			jobInfo.setJobName(jsonObject.getString("jobName"));
 			
-			boolean flag = quartzServiceImpl.jobPause(jobInfo);
+			boolean flag = quartzService.jobPause(jobInfo);
 			if(!flag){
 				return false;
 			}
@@ -251,8 +267,8 @@ public class QuartzServerManager {
 	 */
 	@RequestMapping(value="/resumeJobs",method = RequestMethod.POST)
 	public @ResponseBody boolean resumeJobs(HttpServletRequest request){
-		ServletContext servletContext = request.getServletContext(); 
-		QuartzService quartzServiceImpl = new QuartzServiceImpl(servletContext);
+		ServletContext servletContext = request.getServletContext();     	        	      
+    	quartzService.quartzServiceImpl(servletContext);
 		
 		String requestStr = CommonUtils.reqtoString(request);
 		JSONArray requestJsonArray = JSONArray.fromObject(requestStr);
@@ -265,25 +281,25 @@ public class QuartzServerManager {
 			jobInfo.setJobGroup(jsonObject.getString("jobGroup"));
 			jobInfo.setJobName(jsonObject.getString("jobName"));
 			
-			boolean flag = quartzServiceImpl.jobResume(jobInfo);
+			boolean flag = quartzService.jobResume(jobInfo);
 			if(!flag){
 				return false;
 			}
 						
 			
-		    triggerList = quartzServiceImpl.getTriggersOfJob(jsonObject.getString("jobName"), jsonObject.getString("jobGroup"));
+		    triggerList = quartzService.getTriggersOfJob(jsonObject.getString("jobName"), jsonObject.getString("jobGroup"));
 		    Trigger trigger = triggerList.get(0);
 			if((trigger instanceof SimpleTrigger)){
 				TriggerState triggerState = null;
 				TriggerKey triggerKey = trigger.getKey();
 				try {
-					triggerState = quartzServiceImpl.getTheScheduler().getTriggerState(triggerKey);
+					triggerState = quartzService.getTheScheduler().getTriggerState(triggerKey);
 				} catch (SchedulerException e) {
 					e.printStackTrace();
 				}
 				if(triggerState.equals(TriggerState.COMPLETE)){
 					try {
-						quartzServiceImpl.getTheScheduler().unscheduleJob(triggerKey);
+						quartzService.getTheScheduler().unscheduleJob(triggerKey);
 					} catch (SchedulerException e) {
 						e.printStackTrace();
 					}
@@ -300,9 +316,9 @@ public class QuartzServerManager {
 	 * @return
 	 */
 	//@RequestMapping(value="/batchAddJobs",method = RequestMethod.POST)
-	public @ResponseBody boolean batchAddJobs(HttpServletRequest request){
-		ServletContext servletContext = request.getServletContext(); 
-		QuartzService quartzServiceImpl = new QuartzServiceImpl(servletContext);			
+	public @ResponseBody boolean batchAddJobs(HttpServletRequest request){			
+		ServletContext servletContext = request.getServletContext();     	        	      
+    	quartzService.quartzServiceImpl(servletContext);
 		
 		String requestStr = CommonUtils.reqtoString(request);
 		JSONObject requestJson = JSONObject.fromObject(requestStr);	
@@ -335,7 +351,7 @@ public class QuartzServerManager {
 		    jobInfo.setJobName(jobuuid);
 		    jobInfo.setJobClassName(jobClassName);
 		    
-		    flag = quartzServiceImpl.addNewJob(jobInfo);
+		    flag = quartzService.addNewJob(jobInfo);
 		    if(!flag){
 		    	return false;
 		    }		   
@@ -362,7 +378,7 @@ public class QuartzServerManager {
 			triggerInfo.setTriggerType("CRON_TRIGGER");						
 			triggerInfo.setCronExpression(cronExpression);
 			
-			flag = quartzServiceImpl.addTrigger(jobInfo, triggerInfo);
+			flag = quartzService.addTrigger(jobInfo, triggerInfo);
 			
 		}				
 		
@@ -372,9 +388,8 @@ public class QuartzServerManager {
 	
 	@RequestMapping(value="/batchAddJobs",method = RequestMethod.POST)
 	public @ResponseBody boolean simpleTest(HttpServletRequest request){
-		
-		ServletContext servletContext = request.getServletContext(); 
-		QuartzService quartzServiceImpl = new QuartzServiceImpl(servletContext);
+		ServletContext servletContext = request.getServletContext();     	        	      
+    	quartzService.quartzServiceImpl(servletContext);
 		
 		String requestStr = CommonUtils.reqtoString(request);
 		JSONObject requestJson = JSONObject.fromObject(requestStr);	
@@ -389,17 +404,21 @@ public class QuartzServerManager {
 					.build();
 			
 			try {
-				quartzServiceImpl.getTheScheduler()
-				.scheduleJob(job, trigger);							
+				quartzService.getTheScheduler().scheduleJob(job, trigger);
+				
+				//redisUtilService.sAdd("QuartzTest"+Integer.toString(i), requestStr);
 			} catch (SchedulerException e) {				
 				e.printStackTrace();
 				return false;
 			}
+			
 		}
 		
 		return true;
 		
 	}
+	
+	
 	
 	/**
 	 * 获取任务执行日志
@@ -409,6 +428,7 @@ public class QuartzServerManager {
 	 */
 	@RequestMapping(value="/getJobLogs",method = RequestMethod.GET)
 	public @ResponseBody Map<String,Object> getJobLogs(@RequestParam("jobName") String jobName, @RequestParam("jobGroup") String jobGroup){						
+		
 		Map<String,Object> returnMap = new HashMap<String,Object>();
 		
 		Map<String,Object> paramMap = new HashMap<String,Object>();
@@ -443,18 +463,18 @@ public class QuartzServerManager {
 	 * @return
 	 */
 	public int getJobCounts(HttpServletRequest request){
-		int jobCounts = 0;
+		ServletContext servletContext = request.getServletContext();     	        	      
+    	quartzService.quartzServiceImpl(servletContext);
 		
-		ServletContext servletContext = request.getServletContext(); 
-		QuartzService quartzServiceImpl = new QuartzServiceImpl(servletContext);
+		int jobCounts = 0;
 		try {
-			List<String> allJobGroupNamesList = quartzServiceImpl.getTheScheduler().getJobGroupNames();
+			List<String> allJobGroupNamesList = quartzService.getTheScheduler().getJobGroupNames();
 			Iterator<String> jobGroupIterator = allJobGroupNamesList.iterator();
 			while(jobGroupIterator.hasNext()){
 				//获取任务组名
 				String groupNameStr = jobGroupIterator.next();
 				//根据组名获取jobKey集合(jok由jonGroupName和jobName(唯一) 组成)
-				Set<JobKey> jobKeySet = quartzServiceImpl.getTheScheduler().getJobKeys(GroupMatcher.jobGroupEndsWith(groupNameStr));
+				Set<JobKey> jobKeySet = quartzService.getTheScheduler().getJobKeys(GroupMatcher.jobGroupEndsWith(groupNameStr));
 				
 				jobCounts += jobKeySet.size();
 			}

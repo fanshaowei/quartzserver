@@ -11,6 +11,12 @@ import com.papi.quartz.bean.SenseDeviceSceneRelate;
 import com.papi.quartz.mapper.SenseDeviceSceneRelateMapper;
 import com.papi.quartz.service.SenseDeviceSceneRelateService;
 
+/**
+ * 
+ * @author fanshaowei
+ *
+ *用来对情景关联 信息的保存，更改，删除
+ */
 @Service("senseDeviceSceneRelateService")
 public class SenseDeviceSceneRelateServiceImpl implements SenseDeviceSceneRelateService{
     @Resource

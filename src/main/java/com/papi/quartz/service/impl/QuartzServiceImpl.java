@@ -1,6 +1,5 @@
 package com.papi.quartz.service.impl;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -34,10 +33,10 @@ import org.quartz.TimeOfDay;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
-import org.quartz.DateBuilder.IntervalUnit;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.impl.triggers.DailyTimeIntervalTriggerImpl;
+import org.springframework.stereotype.Service;
 
 import com.papi.quartz.bean.JobInfo;
 import com.papi.quartz.bean.TriggerInfo;
@@ -46,34 +45,40 @@ import com.papi.quartz.service.QuartzService;
 import com.papi.quartz.utils.DateUtils;
 import com.papi.quartz.utils.QuartzUtils;
 
-
-public class QuartzServiceImpl implements QuartzService,Serializable {    
-
-	private static final long serialVersionUID = 1L;
-    
+/**
+ * 
+ * @author fanshaowei
+ *
+ *quartz定时器通用类
+ */
+@Service("quartzService")
+public class QuartzServiceImpl implements QuartzService {        
 	static Logger logger = Logger.getLogger(QuartzServiceImpl.class.getName());
-	
+
 	private Scheduler scheduler;
 	private JobDetail jobDetail;
 	private JobDataMap jobDataMap;	
 	
-	public QuartzServiceImpl(){}
-	
+	public QuartzServiceImpl(){}	
+
 	public QuartzServiceImpl(Scheduler scheduler){
 		this.scheduler = scheduler;
 	}
 		
-	public QuartzServiceImpl(ServletContext servletContext){
-		StdSchedulerFactory factory = 
-				(StdSchedulerFactory)servletContext.getAttribute("org.quartz.impl.StdSchedulerFactory.KEY");
-		try {
-			this.scheduler = factory.getScheduler();
-		} catch (SchedulerException e) {
-			e.printStackTrace();
+	@Override
+	public void quartzServiceImpl(ServletContext servletContext){		
+		if(this.scheduler==null){
+			StdSchedulerFactory factory = 
+					(StdSchedulerFactory)servletContext.getAttribute("org.quartz.impl.StdSchedulerFactory.KEY");
+				try {
+					this.scheduler = factory.getScheduler();
+				} catch (SchedulerException e) {
+					e.printStackTrace();
+				}
 		}
 	}
 	
-	
+	@Override
 	public Scheduler getTheScheduler(){
 		return this.scheduler;
 	}
@@ -971,6 +976,23 @@ public class QuartzServiceImpl implements QuartzService,Serializable {
 	}
 	
 	/**
+	 * 暂停触发器
+	 */
+	@Override
+	public boolean triggerPause(String triggerName, String triggerGroup){
+		boolean flag = false;
+		
+		try {
+			 this.scheduler.pauseTrigger(TriggerKey.triggerKey(triggerName,triggerGroup));
+			 flag = true;
+		} catch (SchedulerException e) {			
+			e.printStackTrace();
+		}
+		
+		return flag;
+	}
+	
+	/**
 	 * 
 	 * @param triggerInfo
 	 * @return
@@ -988,7 +1010,9 @@ public class QuartzServiceImpl implements QuartzService,Serializable {
 		return exist;
 	}
 	
-	
+	/**
+	 * 获取job的相关触发器
+	 */
 	@Override
 	public List<? extends Trigger> getTriggersOfJob(String jobName,String jobGroup){
 		JobKey jobKey = new JobKey(jobName, jobGroup);

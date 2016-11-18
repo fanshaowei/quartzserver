@@ -11,6 +11,12 @@ import com.papi.quartz.bean.QutzJobFiredDetails;
 import com.papi.quartz.mapper.QutzJobFiredDetailsMapper;
 import com.papi.quartz.service.QutzJobFiredDetailsService;
 
+/**
+ * 
+ * @author fanshaowei
+ *
+ *执行定时任务时，用来记录，更改定时任务日志的
+ */
 @Service("qutzJobFiredDetailsService")
 public class QutzJobFiredDetailsServiceImpl implements QutzJobFiredDetailsService{
 	
