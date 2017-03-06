@@ -191,7 +191,8 @@ public class QuartzServerManager {
 	 */
 	@RequestMapping(value="/deleteJobs",method = RequestMethod.POST)
 	public @ResponseBody boolean deleteJobs(HttpServletRequest request){
-		/*ServletContext servletContext = request.getServletContext();     	        	      
+		
+		ServletContext servletContext = request.getServletContext();     	        	      
     	quartzService.quartzServiceImpl(servletContext);
 		
 		String requestStr = CommonUtils.reqtoString(request);
@@ -213,21 +214,18 @@ public class QuartzServerManager {
 			paramMap.put("jobName", jsonObject.getString("jobName"));
 			paramMap.put("jobGroup", jsonObject.getString("jobGroup"));
 			try {
-				qutzJobFiredDetailsService.deleteQutzJobFiredDetails(paramMap);
-				
-				//redisUtilService.delKey("QuartzTest" + String.valueOf(i));
+				qutzJobFiredDetailsService.deleteQutzJobFiredDetails(paramMap);				
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-		}*/
+		}
 		
-		try {
-			Set<JobKey> jobkey = quartzService.getTheScheduler().getJobKeys(GroupMatcher.jobGroupStartsWith("group"));
-			List<JobKey> list = new ArrayList<JobKey>(jobkey);
-			quartzService.getTheScheduler().deleteJobs(list);
+		/*try {						
+			quartzService.getTheScheduler().clear();
 		} catch (SchedulerException e) {
 			e.printStackTrace();
-		}
+		}*/
+		
 		
 		return true;
 	}
@@ -397,9 +395,10 @@ public class QuartzServerManager {
 		String batchCronExpress = requestJson.getString("batchCronExpress");
         
 		for(int i=0; i<jobCnt; i++){
-			JobDetail job = newJob(HelloJob.class).withIdentity("job"+ String.valueOf(i), "group"+String.valueOf(i))
+			String uuid = UUID.randomUUID().toString();
+			JobDetail job = newJob(HelloJob.class).withIdentity(uuid + "-job"+ String.valueOf(i), uuid + "-group"+String.valueOf(i))
 					.build();
-			CronTrigger trigger =  newTrigger().withIdentity("trigger"+String.valueOf(i), "group"+String.valueOf(i))
+			CronTrigger trigger =  newTrigger().withIdentity(uuid +"-trigger"+String.valueOf(i), uuid +"-group"+String.valueOf(i))
 					.withSchedule(cronSchedule(batchCronExpress))
 					.build();
 			

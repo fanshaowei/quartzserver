@@ -68,7 +68,7 @@ quartzServerManager.initDataGrid = function(){
 			}
 		}],
 		method:"get",
-		url: top.Client.CONST_PATH + "/quartzServerManager/getAllJobDetails",
+		//url: top.Client.CONST_PATH + "/quartzServerManager/getAllJobDetails",
 		loadMsg:'数据加载中...',
 		columns:[[
 		    {field:'ck',checkbox:true},          
@@ -406,7 +406,8 @@ quartzServerManager.deleteJob = function(){
 				
 				$.ajax({
 		            type: 'POST',
-		            url: top.Client.CONST_PATH + "/quartzServerManager/deleteJobs",	            
+		            url: top.Client.CONST_PATH + "/quartzServerManager/deleteJobs",	   
+		            timeout: 30000,
 					data: JSON.stringify(quartzServerManager.selectRowData),
 		            dataType:"json"	,				
 					contentType:"application/json;charset=utf-8",		
@@ -426,6 +427,25 @@ quartzServerManager.deleteJob = function(){
 			
 		});		
 	}
+	
+	
+/*	$.ajax({
+        type: 'POST',
+        url: top.Client.CONST_PATH + "/quartzServerManager/deleteJobs",	   
+        timeout: 30000,
+		data: JSON.stringify(quartzServerManager.selectRowData),
+        dataType:"json"	,				
+		contentType:"application/json;charset=utf-8",		
+        success: function(data) {
+            if(data){
+            	quartzServerManager.removeload();
+            	
+            	quartzServerManager.selectRowData = [];
+            	$.messager.alert('提示','删除任务成功');
+            	$("#task-list").datagrid('reload');
+            }
+        }
+    });*/
 }
 
 //暂停任务

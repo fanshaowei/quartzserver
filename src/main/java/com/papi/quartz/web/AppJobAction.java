@@ -34,6 +34,12 @@ import com.papi.quartz.service.SenseDeviceSceneRelateService;
 
 import com.papi.quartz.utils.CommonUtils;
 
+/**
+ * 
+ * @author fanshaowei
+ *
+ *手机端app情景接口
+ */
 @Controller
 @RequestMapping("/appjob")
 public class AppJobAction {

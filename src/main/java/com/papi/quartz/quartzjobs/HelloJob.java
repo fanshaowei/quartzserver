@@ -26,15 +26,12 @@ import com.papi.quartz.service.NettyUtilService;
  *定时任务测试类
  */
 public class HelloJob implements Job{
-    private Logger logger  = Logger.getLogger(HelloJob.class.getName());
 	
-	@SuppressWarnings("unused")
 	@Override
 	public void execute(JobExecutionContext jobExecutionContext)
 			throws JobExecutionException {		
 		
 		ApplicationContext applicationContex = null;
-		String smarthomeSenseUrl = "";
 		NettyUtilService nettyUtilService = null;
 		try {
 			 applicationContex = 
@@ -42,7 +39,7 @@ public class HelloJob implements Job{
 			 QuartzServerConfig quartzServerConfig = (QuartzServerConfig) applicationContex.getBean("quartzServerConfig");
 			 nettyUtilService = (NettyUtilService) applicationContex.getBean("nettyUtilService");
 			 //获取配置 调用接口的项目路径
-			 smarthomeSenseUrl = quartzServerConfig.getSmarthomeSenseUrl();
+			 //smarthomeSenseUrl = quartzServerConfig.getSmarthomeSenseUrl();
 		} catch (SchedulerException e) {		
 			e.printStackTrace();
 		}		
@@ -51,19 +48,17 @@ public class HelloJob implements Job{
 		JobKey jobKey = jobExecutionContext.getJobDetail().getKey();
 		String jobGroup = jobKey.getGroup();
 		final String jobName = jobKey.getName();		
-		TriggerKey triggerKey = jobExecutionContext.getTrigger().getKey();
-		
-		
-		final DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss SSS");
-		logger.info("------" + jobName + "执行时间:" + df.format(new Date()) + "---------->" );
-		System.out.println("------" + jobName + "执行时间:" + df.format(new Date()) + "---------->");
-		String str = "------" + jobName + "执行时间:" + df.format(new Date()) + "---------->";
+		TriggerKey triggerKey = jobExecutionContext.getTrigger().getKey();				
 		
 		JSONObject jsonWrite = new JSONObject();
 		jsonWrite.element("type", "test");
 		jsonWrite.element("jobName",jobName);
 		
 		NettyClient nettyClient = nettyUtilService.getNettyClient();
+		
+		final DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss SSS");
+		System.out.println("------" + jobName + "执行时间:" + df.format(new Date()) + "---------->");
+		
 		nettyClient.writeMesg(jsonWrite.toString());//
 		
 		/*String testUrl = smarthomeSenseUrl + "/quartzReqTest?jobName="+jobName;					
