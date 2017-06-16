@@ -69,7 +69,7 @@
     <div style="height:5%;width:100%;">
         <span class="contain-title" >
 	        <!-- <span class="contain-title-icon icon-configure" ></span> -->
-	        <span class="contain-title-memo"><h3 style="margin: 0px;">定时服务器测试</h3></span>
+	        <span class="contain-title-memo"><h3 style="margin: 0px;">定时服务器</h3></span>
         </span>               
     </div>
     

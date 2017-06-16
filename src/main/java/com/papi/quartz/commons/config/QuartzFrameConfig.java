@@ -16,13 +16,15 @@ public class QuartzFrameConfig {
 	private String threadPriority;
 	private String misfireThreshold;
 	private String jobStoreClass;
+	private String customJobListenerName;
+	private String customJobListenerClass;
 	
 	public QuartzFrameConfig(){}
 	
 	public QuartzFrameConfig(String instanceName, String instanceId,
 			String threadPoolClass, String makeThreadsDaemons,
 			String threadCount, String threadPriority, String misfireThreshold,
-			String jobStoreClass) {
+			String jobStoreClass, String customJobListenerName, String customJobListenerClass) {
 		super();
 		this.instanceName = instanceName;
 		this.instanceId = instanceId;
@@ -32,6 +34,8 @@ public class QuartzFrameConfig {
 		this.threadPriority = threadPriority;
 		this.misfireThreshold = misfireThreshold;
 		this.jobStoreClass = jobStoreClass;
+		this.customJobListenerClass = customJobListenerClass;
+		this.customJobListenerName = customJobListenerName;
 	}
 
 	public String getInstanceName() {
@@ -97,7 +101,21 @@ public class QuartzFrameConfig {
 	public void setJobStoreClass(String jobStoreClass) {
 		this.jobStoreClass = jobStoreClass;
 	}
-    
-	
+
+	public String getCustomJobListenerName() {
+		return customJobListenerName;
+	}
+
+	public void setCustomJobListenerName(String customJobListenerName) {
+		this.customJobListenerName = customJobListenerName;
+	}
+
+	public String getCustomJobListenerClass() {
+		return customJobListenerClass;
+	}
+
+	public void setCustomJobListenerClass(String customJobListenerClass) {
+		this.customJobListenerClass = customJobListenerClass;
+	}    	
 	
 }

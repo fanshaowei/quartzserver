@@ -35,17 +35,17 @@
      <mvc:resources location="/" mapping="/**/*.gif" />  
      
      <!--springmvc restful跨域资源共享配置  -->
-    <mvc:cors>
+   <!--  <mvc:cors>
 	    <mvc:mapping path="/**"
 	        allowed-origins="*"
 	        allowed-methods="GET, PUT, POST "
 	        allowed-headers="Content-Type,X-Token,X-Username,accept, x-requested-with"
 	        exposed-headers="" allow-credentials="false"
 	        max-age="3600" />	   
-    </mvc:cors>  
-   <!--  <mvc:cors>
+    </mvc:cors>   -->
+    <mvc:cors>
 		<mvc:mapping path="/**" />
-	</mvc:cors> -->
+	</mvc:cors> 
      
      <!-- 配置控制器，扫描带有@Component @Controller@Service等这些注解的类 -->     
      <context:component-scan base-package="com.papi.quartz.**.web"></context:component-scan>                          

@@ -53,18 +53,22 @@ public class SenseControlJob extends BasicJob{
 		String username = map.getString("username");//获取用户相关信息和情景ID	
 		String doScene = map.getString("doScene");		
 		String reqToken = redisUtilService.get("T" + username);//获取redis中的token
+		if(reqToken == null){
+			reqToken = "";
+		}
 		
 		JSONArray doSceneJSONArray = JSONArray.fromObject(doScene);
 		String sceneId = doSceneJSONArray.getJSONObject(0).getString("sceneId");
 		
 		final DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss SSS");
-		logger.info("------" + jobName + "执行时间:" + df.format(new Date()) + "---------->" + System.currentTimeMillis() );		
+		logger.info("------任务:" + jobName + " 触发时间:" + df.format(new Date()) + "---------->" + System.currentTimeMillis() );		
 		
 		JSONObject jsonWrite = new JSONObject();
 		jsonWrite.element("type", "sceneCtl");
 		jsonWrite.element("username",username);
 		jsonWrite.element("sceneId",sceneId);
 		jsonWrite.element("reqToken",reqToken);
+		jsonWrite.element("jobName", jobName);
 		
 		NettyClient nettyClient = nettyUtilService.getNettyClient();
 		nettyClient.writeMesg(jsonWrite.toString());

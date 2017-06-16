@@ -1,8 +1,8 @@
 package com.papi.quartz.web;
 
+import static org.quartz.CronScheduleBuilder.cronSchedule;
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
-import static org.quartz.CronScheduleBuilder.cronSchedule;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -37,10 +37,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.papi.quartz.bean.AppRequestJobInfo;
 import com.papi.quartz.bean.JobInfo;
 import com.papi.quartz.bean.QutzJobFiredDetails;
-import com.papi.quartz.bean.ReturnBean;
 import com.papi.quartz.bean.TriggerInfo;
 import com.papi.quartz.quartzjobs.HelloJob;
 import com.papi.quartz.service.QuartzService;

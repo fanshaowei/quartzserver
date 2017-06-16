@@ -60,7 +60,9 @@ public class SchdulerLoaderListener implements ServletContextListener
 	    properties.setProperty("org.quartz.threadPool.threadPriority", quartzFrameConfig.getThreadPriority());	    
 	    properties.setProperty("org.quartz.jobStore.misfireThreshold", quartzFrameConfig.getMisfireThreshold());	    
 	    properties.setProperty("org.quartz.jobStore.class", quartzFrameConfig.getJobStoreClass());
-	    		
+	    properties.setProperty("org.quartz.jobListener.CustomJobListener.name", quartzFrameConfig.getCustomJobListenerName());	    
+	    properties.setProperty("org.quartz.jobListener.CustomJobListener.class", quartzFrameConfig.getCustomJobListenerClass());
+	    
 		return properties;
 	}
 	

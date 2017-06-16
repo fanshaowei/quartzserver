@@ -1,27 +1,10 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package com.papi.netty;
-
-import javax.net.ssl.SSLException;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -29,6 +12,12 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.handler.codec.Delimiters;
 import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.util.HashedWheelTimer;
+
+import java.util.concurrent.TimeUnit;
+
+import org.apache.log4j.Logger;
 
 /**
  * 
@@ -38,37 +27,70 @@ import io.netty.handler.codec.string.StringDecoder;
  *
  */
 public final class NettyClient {
+	private static Logger logger = Logger.getLogger(NettyClient.class.getName());
+	
     private static EventLoopGroup eventLoopGroup;
     private static ChannelFuture channelFuture;
     
-    public void connect(String host,int port) throws SSLException, InterruptedException{    	 
+    protected final HashedWheelTimer timer = new HashedWheelTimer();//(3, TimeUnit.SECONDS, 1);
+    private final ConnectorIdleStateTrigger idleStateTrigger = new ConnectorIdleStateTrigger();
+    
+    public void connect(String host,int port){    	 
          // Configure the client.
          eventLoopGroup = new NioEventLoopGroup();
          try {
              Bootstrap b = new Bootstrap();
              b.group(eventLoopGroup)
               .channel(NioSocketChannel.class)
-              .option(ChannelOption.SO_KEEPALIVE, true)
-              .handler(new ChannelInitializer<SocketChannel>() {
+              .option(ChannelOption.SO_KEEPALIVE, true);
+             /* .handler(new ChannelInitializer<SocketChannel>() {
                   @Override
                   public void initChannel(SocketChannel ch) throws Exception {
                       ChannelPipeline pipeline = ch.pipeline();
-
+                      pipeline.addLast(new IdleStateHandler(0, 4, 0, TimeUnit.SECONDS));
                       pipeline.addLast(new DelimiterBasedFrameDecoder(1024, true, Delimiters.lineDelimiter()));
                       pipeline.addLast(new StringDecoder());
                       pipeline.addLast(new NettyClientInBoundHandler());
                       pipeline.addLast(new NettyClientOutBoundHandler());
                   }
-              });
-
-             // Start the client.
-             channelFuture = b.connect(host, port).sync();
-
-             // Wait until the connection is closed.
-             channelFuture.channel().closeFuture().sync();
+              });*/          
+             //channelFuture = b.connect(host, port).sync();             
+             //channelFuture.channel().closeFuture().sync();
+             
+             final ConnectionWatchdog watchdog = new ConnectionWatchdog(b, timer, port, host, true) {
+				
+				@Override
+				public ChannelHandler[] handlers() {					
+					return new ChannelHandler[]{
+						this,
+						new IdleStateHandler(0, 60, 0, TimeUnit.SECONDS),
+						idleStateTrigger,
+						new DelimiterBasedFrameDecoder(1024, true, Delimiters.lineDelimiter()),
+	                    new StringDecoder(),
+	                    new NettyClientInBoundHandler(),
+	                    new NettyClientOutBoundHandler()
+					};
+				}
+			};
+            synchronized (b) {
+            	b.handler(new ChannelInitializer<SocketChannel>() {
+    				@Override
+    				public void initChannel(SocketChannel ch) throws Exception {
+    					ch.pipeline().addLast(watchdog.handlers());
+    				};
+    			});
+            	channelFuture = b.connect(host,port);
+			}
+						
+            channelFuture.sync();
+			//channelFuture.channel().closeFuture().sync();
+			
+         }catch(Exception e){
+         	e.printStackTrace();
+         	logger.info("connects to  fails"); 
          } finally {
              // Shut down the event loop to terminate all threads.
-        	 eventLoopGroup.shutdownGracefully();
+        	 //eventLoopGroup.shutdownGracefully();
          }
     }
     

@@ -68,7 +68,7 @@ quartzServerManager.initDataGrid = function(){
 			}
 		}],
 		method:"get",
-		//url: top.Client.CONST_PATH + "/quartzServerManager/getAllJobDetails",
+		url: top.Client.CONST_PATH + "/quartzServerManager/getAllJobDetails",
 		loadMsg:'数据加载中...',
 		columns:[[
 		    {field:'ck',checkbox:true},          

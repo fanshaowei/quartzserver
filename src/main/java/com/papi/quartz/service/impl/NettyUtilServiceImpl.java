@@ -2,7 +2,6 @@ package com.papi.quartz.service.impl;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.net.ssl.SSLException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -47,13 +46,7 @@ public class NettyUtilServiceImpl implements NettyUtilService {
 			@Override
 			public void run() {
 				super.run();
-				try {
-					nettyClient.connect(host,port);
-				} catch (SSLException e) {
-					e.printStackTrace();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+				nettyClient.connect(host,port);
 			}
 		};	
 		nettyClientThread.setDaemon(true);

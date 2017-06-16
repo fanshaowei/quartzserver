@@ -16,7 +16,7 @@
     
     <!--加载properties文件  --> 
     <context:property-placeholder 
-    	location="classpath:jdbc.properties,classpath:redis.properties,
+    	location="classpath:jdbc.properties,classpath:redis.properties,classpath:quartz.properties,
     		classpath:quartzServerConfig.properties,classpath:netty.properties"/>			
 	
 	<!-- 加载自定义的配置 -->
@@ -33,6 +33,8 @@
 		<property name="threadPriority" value="${org.quartz.threadPool.threadPriority}"></property>
 		<property name="misfireThreshold" value="${org.quartz.jobStore.misfireThreshold}"></property>
 		<property name="jobStoreClass" value="${org.quartz.jobStore.class}"></property>
+		<property name="customJobListenerName" value="${org.quartz.jobListener.CustomJobListener.name}"></property>
+		<property name="customJobListenerClass" value="${org.quartz.jobListener.CustomJobListener.class}"></property>
 	</bean>
 	
 	<bean id="nettyConfig" class = "com.papi.quartz.commons.config.NettyConfig">
@@ -46,7 +48,7 @@
         <property name="password" value="${jdbc.password}"></property>
         <property name="driverClass" value="${jdbc.driver}"></property>
         <property name="jdbcUrl" value="${jdbc.url}"></property>
-        		<!-- 连接池中保留的最小连接数 最小链接数 -->
+        <!-- 连接池中保留的最小连接数 最小链接数 -->
 		<property name="minPoolSize">
 			<value>1</value>
 		</property>
