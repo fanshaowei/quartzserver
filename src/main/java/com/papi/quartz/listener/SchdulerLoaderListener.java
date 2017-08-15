@@ -118,7 +118,15 @@ public class SchdulerLoaderListener implements ServletContextListener
 				    }
 			    }
 		    }//end while
-		}//end if
+		}/*else{//若redis没有任务信息，则同步mysql中的任务
+			try {
+				mysqlToRedisUtilService.mysqlToRedis(appJobService, servletContext);
+				System.out.println("**********mysql同步信息到redis***********");
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}*/
     }
     
 	  @Override

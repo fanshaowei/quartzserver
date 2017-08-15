@@ -79,9 +79,14 @@ public class AppJobAction {
     	String idGateway = appRequestJobInfo.getIdGateway();
     	String idFamily = appRequestJobInfo.getIdFamily();
     	String jobName = appRequestJobInfo.getJobName();
+    	String userName = appRequestJobInfo.getUserName();
     	JSONObject sourceScene = JSONObject.fromObject(appRequestJobInfo.getSourceScene());
     	JSONArray doScene = JSONArray.fromObject(appRequestJobInfo.getDoScene());
     	boolean isBetweenConfigTime = appRequestJobInfo.getIsBetweenConfigTime();    	  					    	
+    	
+    	JSONObject sceneJson = new JSONObject();
+    	sceneJson.accumulate("doScene", doScene);
+    	sceneJson.accumulate("username", userName);
     	
     	//保存关联任务到数据库
     	SenseDeviceSceneRelate senseDeviceSceneRelate = new SenseDeviceSceneRelate();
@@ -89,11 +94,7 @@ public class AppJobAction {
     	senseDeviceSceneRelate.setIdGateway(idGateway);
     	senseDeviceSceneRelate.setJobName(jobName);
     	senseDeviceSceneRelate.setIdDevice(sourceScene.getString("idDevice"));
-    	
-    	JSONObject sceneJson = new JSONObject();
-    	sceneJson.accumulate("doScene", doScene);
-    	sceneJson.accumulate("username", appRequestJobInfo.getUserName());
-    	
+    	senseDeviceSceneRelate.setTriggerSourceJson(sourceScene.toString());
     	senseDeviceSceneRelate.setSceneJson(sceneJson.toString());
     	if(isBetweenConfigTime){
     		senseDeviceSceneRelate.setIsValid("1");
@@ -292,7 +293,8 @@ public class AppJobAction {
 				senseDeviceSceneRelate.setId(idParam);
 		    	//senseDeviceSceneRelate.setIdFamily(Integer.parseInt(idFamily));  
 		    	senseDeviceSceneRelate.setIdGateway(idGateway);
-		    	senseDeviceSceneRelate.setIdDevice(sourceScene.getString("idDevice"));     	
+		    	senseDeviceSceneRelate.setIdDevice(sourceScene.getString("idDevice")); 
+		    	senseDeviceSceneRelate.setTriggerSourceJson(sourceScene.toString());
 		    	if(isBetweenConfigTime){
 		    		senseDeviceSceneRelate.setIsValid("1");
 		    	} else {

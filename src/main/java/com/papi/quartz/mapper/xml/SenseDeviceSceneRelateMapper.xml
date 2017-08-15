@@ -7,6 +7,7 @@
         <result property="idFamily" column="id_family" javaType="java.lang.Integer" jdbcType="INTEGER"/>
         <result property="idGateway" column="id_gateway" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="idDevice" column="id_device" javaType="java.lang.String" jdbcType="VARCHAR"/>
+        <result property="triggerSourceJson" column="triggerSourceJson" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="sceneJson" column="sceneJson" javaType="java.lang.String" jdbcType="VARCHAR"/>
         <result property="isValid" column="isValid" javaType="java.lang.String" jdbcType="VARCHAR"/>
     </resultMap>
@@ -34,11 +35,12 @@
 
     <insert id="insert" parameterType="com.papi.quartz.bean.SenseDeviceSceneRelate">
         INSERT INTO sense_device_scene_relate
-        (id_family,id_gateway,jobName,id_device,sceneJson,isValid) values
+        (id_family,id_gateway,jobName,id_device,triggerSourceJson,sceneJson,isValid) values
         (#{idFamily},
          #{idGateway},
          #{jobName},         
          #{idDevice},
+         #{triggerSourceJson},
          #{sceneJson},
          #{isValid})
          <selectKey keyProperty="id" resultType="int" order="AFTER">

@@ -17,6 +17,7 @@ public class SenseDeviceSceneRelate implements Serializable{
     private int idFamily;
     private String idGateway;
     private String idDevice;
+    private String triggerSourceJson;
     private String sceneJson;
     private String isValid;
 	public int getId() {
@@ -43,6 +44,12 @@ public class SenseDeviceSceneRelate implements Serializable{
 	}
 	public void setIdGateway(String idGateway) {
 		this.idGateway = idGateway;
+	}	
+	public String getTriggerSourceJson() {
+		return triggerSourceJson;
+	}
+	public void setTriggerSourceJson(String triggerSourceJson) {
+		this.triggerSourceJson = triggerSourceJson;
 	}
 	public String getIdDevice() {
 		return idDevice;
@@ -50,6 +57,7 @@ public class SenseDeviceSceneRelate implements Serializable{
 	public void setIdDevice(String idDevice) {
 		this.idDevice = idDevice;
 	}
+	
 	public String getSceneJson() {
 		return sceneJson;
 	}
