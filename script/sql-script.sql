@@ -1,16 +1,16 @@
 /*
 Navicat MySQL Data Transfer
 
-Source Server         : 10.30.30.11
-Source Server Version : 50549
-Source Host           : 10.30.30.11:3306
-Source Database       : platform
+Source Server         : 10.30.30.30
+Source Server Version : 50634
+Source Host           : 10.30.30.30:3306
+Source Database       : smarthome
 
 Target Server Type    : MYSQL
-Target Server Version : 50549
+Target Server Version : 50634
 File Encoding         : 65001
 
-Date: 2016-08-31 08:43:18
+Date: 2017-08-30 09:18:22
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -121,8 +121,9 @@ CREATE TABLE `qrtz_job_fired_details` (
   `triggerType` varchar(50) DEFAULT NULL,
   `firedResult` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `mix_index` (`id`,`jobName`,`jobGroup`)
-) ENGINE=InnoDB AUTO_INCREMENT=2676 DEFAULT CHARSET=utf8;
+  UNIQUE KEY `id` (`id`),
+  KEY `qrtz_job_fired_details_index1` (`jobName`,`jobGroup`)
+) ENGINE=InnoDB AUTO_INCREMENT=332162 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for qrtz_locks
@@ -233,79 +234,43 @@ CREATE TABLE `qrtz_triggers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- ----------------------------
--- Table structure for sense_channel
+-- Table structure for redis_sense_control_job
 -- ----------------------------
-DROP TABLE IF EXISTS `sense_channel`;
-CREATE TABLE `sense_channel` (
+DROP TABLE IF EXISTS `redis_sense_control_job`;
+CREATE TABLE `redis_sense_control_job` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `id_channel` varchar(16) DEFAULT NULL,
-  `status` int(11) DEFAULT NULL,
-  `name_channel` varchar(20) DEFAULT NULL,
-  `id_group` int(11) DEFAULT NULL,
-  `control_json` varchar(255) DEFAULT NULL,
-  `id_device` varchar(16) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8;
-
--- ----------------------------
--- Table structure for sense_device
--- ----------------------------
-DROP TABLE IF EXISTS `sense_device`;
-CREATE TABLE `sense_device` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `id_device` varchar(16) DEFAULT NULL,
-  `name_device` varchar(30) DEFAULT NULL,
-  `is_active` tinyint(1) NOT NULL COMMENT '设备是否在线',
-  `type_device` varchar(30) DEFAULT NULL,
-  `id_gateway` varchar(16) DEFAULT NULL,
-  `id_family` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_device` (`id_device`)
-) ENGINE=InnoDB AUTO_INCREMENT=2755 DEFAULT CHARSET=utf8;
-
--- ----------------------------
--- Table structure for sense_device_scene_relate
--- ----------------------------
-DROP TABLE IF EXISTS `sense_device_scene_relate`;
-CREATE TABLE `sense_device_scene_relate` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `jobName` varchar(200) DEFAULT NULL,
-  `id_family` int(11) NOT NULL,
-  `id_gateway` varchar(16) DEFAULT NULL,
-  `id_device` varchar(16) NOT NULL,
-  `sceneJson` varchar(5000) NOT NULL,
-  `isValid` varchar(1) NOT NULL DEFAULT '1',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=72 DEFAULT CHARSET=utf8;
-
--- ----------------------------
--- Table structure for sense_device_state_log
--- ----------------------------
-DROP TABLE IF EXISTS `sense_device_state_log`;
-CREATE TABLE `sense_device_state_log` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `id_gateway` varchar(255) DEFAULT NULL,
-  `id_device` varchar(255) DEFAULT NULL,
-  `device_type` varchar(255) DEFAULT NULL,
-  `stateCode` int(11) DEFAULT NULL,
-  `stateName` varchar(255) DEFAULT NULL,
-  `time` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=529 DEFAULT CHARSET=utf8;
-
--- ----------------------------
--- Table structure for sense_gateway
--- ----------------------------
-DROP TABLE IF EXISTS `sense_gateway`;
-CREATE TABLE `sense_gateway` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `id_gateway` varchar(16) DEFAULT NULL,
-  `name_gateway` varchar(20) DEFAULT NULL,
-  `type` int(11) DEFAULT NULL,
   `idFamily` int(11) DEFAULT NULL,
-  `createTime` varchar(30) DEFAULT NULL,
-  `creater` varchar(30) DEFAULT NULL,
-  `creator` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_gateway` (`id_gateway`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+  `userName` varchar(20) DEFAULT NULL,
+  `req_token` varchar(100) DEFAULT NULL,
+  `jobName` varchar(200) DEFAULT NULL,
+  `jobState` varchar(50) DEFAULT NULL,
+  `jobType` varchar(50) DEFAULT NULL,
+  `triggerType` varchar(50) DEFAULT NULL,
+  `dayOfWeek` varchar(100) DEFAULT NULL,
+  `dailyTimeArray` varchar(100) DEFAULT NULL,
+  `timeOfDayArray` varchar(100) DEFAULT NULL,
+  `doScene` varchar(5000) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=12 DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Table structure for redis_sense_relate_job
+-- ----------------------------
+DROP TABLE IF EXISTS `redis_sense_relate_job`;
+CREATE TABLE `redis_sense_relate_job` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `idFamily` int(11) DEFAULT NULL,
+  `userName` varchar(20) DEFAULT NULL,
+  `req_token` varchar(100) DEFAULT NULL,
+  `jobName` varchar(200) DEFAULT NULL,
+  `jobState` varchar(50) DEFAULT NULL,
+  `jobType` varchar(50) DEFAULT NULL,
+  `triggerType` varchar(50) DEFAULT NULL,
+  `cronExpressionArray` varchar(120) DEFAULT NULL,
+  `sourceScene` varchar(5000) DEFAULT NULL,
+  `doScene` varchar(5000) DEFAULT NULL,
+  `validity` varchar(50) DEFAULT NULL,
+  `idGateway` varchar(16) DEFAULT NULL,
+  `isBetweenConfigTime` tinyint(2) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=11 DEFAULT CHARSET=utf8;
