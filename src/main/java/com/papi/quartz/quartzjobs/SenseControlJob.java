@@ -69,7 +69,7 @@ public class SenseControlJob extends BasicJob{
 		jsonWrite.element("sceneId",sceneId);
 		jsonWrite.element("reqToken",reqToken);
 		jsonWrite.element("jobName", jobName);
-		
+		logger.info(jsonWrite.toString());
 		NettyClient nettyClient = nettyUtilService.getNettyClient();
 		nettyClient.writeMesg(jsonWrite.toString());
 		

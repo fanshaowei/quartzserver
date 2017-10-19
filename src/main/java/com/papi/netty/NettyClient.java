@@ -63,7 +63,7 @@ public final class NettyClient {
 				public ChannelHandler[] handlers() {					
 					return new ChannelHandler[]{
 						this,
-						new IdleStateHandler(0, 300, 0, TimeUnit.SECONDS),
+						new IdleStateHandler(0, 3600, 0, TimeUnit.SECONDS),
 						idleStateTrigger,
 						new DelimiterBasedFrameDecoder(1024, true, Delimiters.lineDelimiter()),
 	                    new StringDecoder(),

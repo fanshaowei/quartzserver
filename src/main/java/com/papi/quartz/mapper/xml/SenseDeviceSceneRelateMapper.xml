@@ -79,6 +79,9 @@
             <if test="sceneJson != null" >
             sceneJson = #{sceneJson},
             </if>
+            <if test="triggerSourceJson != null">
+            triggerSourceJson = #{triggerSourceJson},	
+            </if>
             <if test="isValid != null">
             isValid = #{isValid}
             </if>            

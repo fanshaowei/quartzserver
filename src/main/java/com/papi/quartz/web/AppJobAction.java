@@ -327,7 +327,7 @@ public class AppJobAction {
 				objStr = obj.toString();
 				appRequestJobInfo_temp = 
 				    (AppRequestJobInfo)JSONObject.toBean(JSONObject.fromObject(objStr), AppRequestJobInfo.class);
-				if(appRequestJobInfo_temp.getJobName().equals(jobName)){
+				if(jobName.equals(appRequestJobInfo_temp.getJobName())){
 					redisUtilService.remove(setKey, obj);
 					break;
 				}
