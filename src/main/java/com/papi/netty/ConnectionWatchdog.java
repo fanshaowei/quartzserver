@@ -21,6 +21,7 @@ public abstract class ConnectionWatchdog extends ChannelInboundHandlerAdapter im
 	private static final Logger logger = Logger.getLogger(ConnectionWatchdog.class);
 			
 	private final Bootstrap bootstrap;
+	private ChannelFuture channelFuture;
 	private final Timer timer;
 	private final int port;
 	
@@ -28,7 +29,7 @@ public abstract class ConnectionWatchdog extends ChannelInboundHandlerAdapter im
 	private volatile boolean reconnec = true;
 	private int attempts;
 	
-	public ConnectionWatchdog(Bootstrap bootstrap, Timer timer, int port,
+	public ConnectionWatchdog(Bootstrap bootstrap, ChannelFuture channelFuture,Timer timer, int port,
 			String host, boolean reconnec) {
 		this.bootstrap = bootstrap;
 		this.timer = timer;
@@ -50,12 +51,10 @@ public abstract class ConnectionWatchdog extends ChannelInboundHandlerAdapter im
 		logger.info("--------------连接关闭--------------");
 		reconnec = true;
 		if(reconnec){
-			//if(attempts < 12){
-				attempts ++;
-				int timeout = 15;//8 << attempts;
-				timer.newTimeout(this, timeout, TimeUnit.SECONDS);
-				logger.info("---------重连第"+ attempts +"次--------");
-			//}
+			attempts ++;
+			int timeout = 15;
+			timer.newTimeout(this, timeout, TimeUnit.SECONDS);
+			logger.info("---------重连第"+ attempts +"次--------");
 		}
 		ctx.fireChannelInactive();
 	}
@@ -66,29 +65,28 @@ public abstract class ConnectionWatchdog extends ChannelInboundHandlerAdapter im
 		ctx.fireChannelInactive();*/
 	}
 	
-	//@Override
-	public void run(Timeout timeout) throws Exception {		
-		ChannelFuture channelFuture = null;
-		
+	public void run(Timeout timeout) throws Exception {	
 		synchronized (bootstrap) {
 			bootstrap.handler(new ChannelInitializer<Channel>() {
-
 				@Override
 				protected void initChannel(Channel ch) throws Exception {
 					ch.pipeline().addLast(handlers());					
 				}				
 			});
-			channelFuture = bootstrap.connect(host,port);
-		}			
+			channelFuture = bootstrap.connect(host,port);			
+		}							
 		
-		channelFuture.addListener(new ChannelFutureListener() {
-			
+		channelFuture.addListener(new ChannelFutureListener() {			
 			@Override
 			public void operationComplete(ChannelFuture f) throws Exception {
+				System.out.println("reconnect future:" + f);
 				boolean succeed = f.isSuccess(); 
-				//如果重连失败，则调用ChannelInactive方法，再次出发重连事件，一直尝试12次，如果失败则不再重连
+				//如果重连失败，则调用ChannelInactive方法，再次出发重连事件
 				if(succeed){
-					logger.info("----------重连成功------------");	
+					logger.info("----------重连成功------------");
+					channelFuture.sync();
+					//重新连接后，要重新设置NettyClient的channelFuture,不然会使用之前的断开的channerFutrue,而使通信失败
+					NettyClient.setChannelFuture(channelFuture);
 					reconnec = false;
 				}else{					
 					logger.info("----------重连失败------------");					

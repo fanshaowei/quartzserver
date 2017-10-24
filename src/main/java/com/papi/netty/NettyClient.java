@@ -32,7 +32,15 @@ public final class NettyClient {
     private static EventLoopGroup eventLoopGroup;
     private static ChannelFuture channelFuture;
     
-    protected final HashedWheelTimer timer = new HashedWheelTimer();//(3, TimeUnit.SECONDS, 1);
+    public static ChannelFuture getChannelFuture() {
+		return channelFuture;
+	}
+
+	public static void setChannelFuture(ChannelFuture channelFuture) {
+		NettyClient.channelFuture = channelFuture;
+	}
+
+	protected final HashedWheelTimer timer = new HashedWheelTimer();//(3, TimeUnit.SECONDS, 1);
     private final ConnectorIdleStateTrigger idleStateTrigger = new ConnectorIdleStateTrigger();
     
     public void connect(String host,int port){    	 
@@ -57,13 +65,13 @@ public final class NettyClient {
              //channelFuture = b.connect(host, port).sync();             
              //channelFuture.channel().closeFuture().sync();
              
-             final ConnectionWatchdog watchdog = new ConnectionWatchdog(b, timer, port, host, true) {
+             final ConnectionWatchdog watchdog = new ConnectionWatchdog(b, channelFuture ,timer, port, host, true) {
 				
 				@Override
 				public ChannelHandler[] handlers() {					
 					return new ChannelHandler[]{
 						this,
-						new IdleStateHandler(0, 3600, 0, TimeUnit.SECONDS),
+						new IdleStateHandler(0, 1800, 0, TimeUnit.SECONDS),
 						idleStateTrigger,
 						new DelimiterBasedFrameDecoder(1024, true, Delimiters.lineDelimiter()),
 	                    new StringDecoder(),
@@ -79,11 +87,8 @@ public final class NettyClient {
     					ch.pipeline().addLast(watchdog.handlers());
     				};
     			});
-            	channelFuture = b.connect(host,port);
+            	channelFuture = b.connect(host,port).sync();
 			}
-						
-            channelFuture.sync();
-			//channelFuture.channel().closeFuture().sync();
 			
          }catch(Exception e){
          	e.printStackTrace();
@@ -99,6 +104,7 @@ public final class NettyClient {
     }
     
     public void writeMesg(String str) {
+    	System.out.println("fucturn :" + channelFuture);
     	str = str + "\n";
     	
     	if(channelFuture.channel().isActive()){
