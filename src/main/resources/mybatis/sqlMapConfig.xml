@@ -22,7 +22,9 @@ PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
 		<!-- 执行类型：SIMPLE-普通返回;REUSE-重复;BATCH-批量更新;如果选择BATCH虽提高性能但无返回影响条数 -->
 		<!-- <setting name="defaultExecutorType" value="SIMPLE" /> -->
 		<!-- 数据库超过25000秒仍未响应则超时 -->
-		<setting name="defaultStatementTimeout" value="25000" />           
+		<setting name="defaultStatementTimeout" value="25000" />        
+		<!--配置输出日志  --> 
+		<setting name="logImpl" value="STDOUT_LOGGING" />     
     </settings>
 
     <!-- 配置别名 -->

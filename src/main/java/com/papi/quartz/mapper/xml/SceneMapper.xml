@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.papi.quartz.mapper.SceneMapper">
+	<!-- 数据表和实体类的对应 -->
+	
+	<resultMap id="rs_SceneBean" type="com.papi.quartz.bean.SceneBean">
+		<result property="idScene" column="id" javaType="java.lang.Integer"
+			jdbcType="INTEGER" />
+		<result property="sceneName" column="sceneName" javaType="java.lang.String"
+			jdbcType="VARCHAR" />
+		<result property="idFamily" column="fid" javaType="java.lang.Integer"
+			jdbcType="INTEGER" />
+		<result property="scenePicture" column="scene_picture" javaType="java.lang.Integer"
+			jdbcType="INTEGER" />
+		<result property="idGroup" column="id_group" javaType="java.lang.Integer"
+			jdbcType="INTEGER" />
+		<result property="scenecontrolJson" column="scenecontrol_json" javaType="java.lang.String"
+			jdbcType="VARCHAR" />
+	</resultMap>
+
+	<!-- 查看 -->
+	<select id="listByParams" resultMap="rs_SceneBean" parameterType="java.util.Map">
+		SELECT * FROM scene
+		<trim prefix="where" prefixOverrides="and | or">
+			<if test="null != idScene">
+				AND id=#{idScene}
+			</if>
+			<if test="null != sceneName">
+				AND sceneName=#{sceneName}
+			</if>
+			<if test="null != scenePicture">
+				AND scene_picture=#{scenePicture}
+			</if>
+			<if test="null != idGroup">
+				AND id_group=#{idGroup}
+			</if>
+			<if test="null != scenecontrolJson">
+				AND scenecontrol_json=#{scenecontrolJson}
+			</if>
+			<if test="null != idFamily">
+				AND fid=#{idFamily}
+			</if>
+			<if test="null != idGroup">
+				AND id_group=#{idGroup}
+			</if>
+		</trim>
+	</select>	
+	
+	<select id="selectById" resultMap="rs_SceneBean" parameterType="int">
+	    SELECT * FROM scene WHERE id=#{idScene}
+	</select>
+	
+</mapper>
