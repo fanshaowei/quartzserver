@@ -38,7 +38,7 @@ public class Test {
 	
 	@RequestMapping("test")
 	public @ResponseBody String test(){
-		appJobService.deleteRedisJob("1", "010611000000382C", "hh");
+		appJobService.deleteRedisAndScheduleJob("1", "010611000000382C");
 		return "111";
 	}
 }
