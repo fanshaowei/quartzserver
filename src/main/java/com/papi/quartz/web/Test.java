@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.papi.netty.NettyClient;
+import com.papi.quartz.service.AppJobService;
 import com.papi.quartz.service.NettyUtilService;
 
 @Controller
@@ -17,6 +18,8 @@ public class Test {
 
 	@Resource
 	NettyUtilService nettyUtilService;
+	@Resource
+	AppJobService appJobService;
 	
 	@RequestMapping("nettyReconnect")
 	public @ResponseBody String nettyReconnectTest(){
@@ -31,5 +34,11 @@ public class Test {
 		nettyClient.writeMesg(jsonWrite.toString());
 		
 		return "haah";
+	}
+	
+	@RequestMapping("test")
+	public @ResponseBody String test(){
+		appJobService.deleteRedisJob("1", "010611000000382C", "hh");
+		return "111";
 	}
 }

@@ -32,5 +32,18 @@
 	        <bean class="org.springframework.data.redis.serializer.JdkSerializationRedisSerializer"></bean>
 	    </property>
 	</bean>
+	
+	<bean id="redisContainer" class="org.springframework.data.redis.listener.RedisMessageListenerContainer">
+	  <property name="connectionFactory" ref="jedisConnectionFactory"/>
+	  <property name="messageListeners">
+	    <map>
+	      <entry key-ref="messageListener">
+	        <bean class="org.springframework.data.redis.listener.ChannelTopic">
+	          <constructor-arg value="SmarthomeDataSync" />
+	        </bean>
+	      </entry>
+	    </map>
+	  </property>
+	</bean>
  
 </beans>

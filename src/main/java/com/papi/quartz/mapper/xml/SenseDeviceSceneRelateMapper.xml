@@ -52,7 +52,7 @@
         DELETE FROM sense_device_scene_relate
         WHERE
         <trim prefixOverrides="and | or">
-            <if test="id != null and id != 0 ">
+            <if test="id != null and id != 0">
             AND id = #{id}
             </if>
             <if test="jobName != null">
@@ -61,8 +61,11 @@
             <if test="idDevice != null">
             AND id_device = #{idDevice}
             </if>
-            <if test="idFamily != null ">
+            <if test="idFamily != null">
 	        AND id_family= #{idFamily}
+	        </if>
+	        <if test="idGateway != null">
+	        AND id_gateway= #{idGateway} 
 	        </if>
         </trim>
     </delete>

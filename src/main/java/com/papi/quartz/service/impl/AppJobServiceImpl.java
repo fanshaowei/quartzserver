@@ -7,6 +7,7 @@ import static org.quartz.TriggerBuilder.newTrigger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Resource;
@@ -20,6 +21,8 @@ import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.papi.quartz.bean.AppRequestJobInfo;
@@ -30,6 +33,8 @@ import com.papi.quartz.enums.QuartzJobs;
 import com.papi.quartz.quartzjobs.HelloJob;
 import com.papi.quartz.service.AppJobService;
 import com.papi.quartz.service.QuartzService;
+import com.papi.quartz.service.QutzJobFiredDetailsService;
+import com.papi.quartz.service.RedisUtilService;
 
 /**
  * 
@@ -39,9 +44,16 @@ import com.papi.quartz.service.QuartzService;
  */
 @Service("appJobService")
 public class AppJobServiceImpl implements AppJobService {
-
+	private Logger logger = LoggerFactory.getLogger(AppJobServiceImpl.class);
+	
 	@Resource
     private QuartzService quartzService;
+	@Resource
+    private RedisUtilService redisUtilService;
+	@Resource
+	private QutzJobFiredDetailsService qutzJobFiredDetailsService;
+	
+	static final String REDIS_JOB_SET="Quartz-";
 	
 	@Override
 	public String addSceneRelateJob(ServletContext servletContext, AppRequestJobInfo appRequestJobInfo){		  	        	     
@@ -507,6 +519,80 @@ public class AppJobServiceImpl implements AppJobService {
 			}			
 		}//end for
 				
+	}
+	
+	/**
+	 * 根据参数删除Redis中的任务
+	 * @param idFamily
+	 * @param idGateway
+	 * @param jobName
+	 * @return
+	 */
+	@Override
+	public String deleteRedisAndScheduleJob(String idFamily, String idGateway){
+		String setKey = REDIS_JOB_SET + idFamily;		
+		Set<Object> jobSet = redisUtilService.sMembers(setKey);
+		
+		try {			
+			String objStr = null;
+			AppRequestJobInfo appRequestJobInfo_temp = null;
+			JobInfo jobInfo = null;
+			boolean flag = false;
+			Long deleCnt = 0L;
+			String jobName = null;
+			
+			for(Object obj : jobSet){
+				objStr = obj.toString();
+				appRequestJobInfo_temp = 
+				    (AppRequestJobInfo)JSONObject.toBean(JSONObject.fromObject(objStr), AppRequestJobInfo.class);
+				
+				jobName = appRequestJobInfo_temp.getJobName();
+				/*********************************************/
+				//删除redis中的定时任务
+				if( (idGateway !=null && idGateway.equals(appRequestJobInfo_temp.getIdGateway())) ||
+					(jobName != null && jobName.equals(appRequestJobInfo_temp.getJobName())) ){
+					deleCnt = redisUtilService.remove(setKey, obj);	
+					if(deleCnt > 0){
+						logger.info("----删除redis中的任务信息 jobGroup: " + idFamily + "jobName:" + jobName + "成功----");
+					}						
+				}
+				/*********************************************/
+				
+				/*********************************************/
+				//删除任务调试器中的任务
+				jobInfo = new JobInfo();
+				jobInfo.setJobGroup(idFamily);
+		    	jobInfo.setJobName(jobName);	    				
+		    	if(quartzService.isJobExsit(jobName, idFamily)){
+		    		flag = quartzService.deleteJob(jobInfo);
+		        	if(flag){
+		        		logger.info("----删除任务调试器中的定时任务 jobGroup: " + idFamily + "jobName:" + jobName + "成功----");	        		
+		        	}
+		    	}else{
+		    		logger.info("删除任务不存在");
+		    	}
+		    	/*********************************************/
+		    	
+		    	/*********************************************/
+		    	//删除调试任务的相关执行日志
+		    	Map<String,Object> paramMap2 = new HashMap<String, Object>();
+		    	paramMap2.put("jobName", jobName);
+				paramMap2.put("jobGroup", idFamily);
+				try {
+					qutzJobFiredDetailsService.deleteQutzJobFiredDetails(paramMap2);
+				} catch (Exception e) {
+					e.printStackTrace();
+					logger.info("----删除任务 jobGroup: " + idFamily + "jobName: " + jobName + "日志失败----");
+				}
+				/*********************************************/
+		    	
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ReturnBean.ReturnBeanToString("fail","删除redis和任务调试器中的任务信息失败",null);
+		}
+		
+		return null;
 	}
 	
 }

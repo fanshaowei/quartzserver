@@ -2,7 +2,6 @@ package com.papi.quartz.web;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,7 +24,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.papi.quartz.bean.AppRequestJobInfo;
 import com.papi.quartz.bean.JobInfo;
 import com.papi.quartz.bean.ReturnBean;
-import com.papi.quartz.bean.SceneBean;
 import com.papi.quartz.bean.SenseDeviceSceneRelate;
 import com.papi.quartz.enums.QuartzJobs;
 import com.papi.quartz.service.AppJobService;
@@ -223,29 +221,29 @@ public class AppJobAction {
     	List<JobInfo> returnJobInfoList = new ArrayList<JobInfo>();
     	JobDataMap jobDataMap ;
     	String jobType_temp;
-    	Object doScene = null;
+    	/*Object doScene = null;
     	JSONArray doSceneJSONArray = null;
     	SceneBean sceneBean = null;
     	String sceneId;
-    	String sceneName;
+    	String sceneName;*/
     	for(JobInfo jobInfo : jobInfoList){
     		jobDataMap = jobInfo.getJobDataMap();//获取任务里的datamap
     		
     		/******************************************************/
     		//更改datamap里的情景关联名字返回，因为家电的情景名字有可能会修改，而造成不同步
-    		doScene = jobDataMap.get("doScene");	
+    		/*doScene = jobDataMap.get("doScene");	
     		doSceneJSONArray = JSONArray.fromObject(doScene);
     		for(int i=0; i<doSceneJSONArray.size(); i++){
     			sceneId = doSceneJSONArray.getJSONObject(i).getString("sceneId");
         		sceneName  = doSceneJSONArray.getJSONObject(i).getString("sceneName");
         		sceneBean = new SceneBean();
-        		sceneBean = sceneService.selectById(Integer.parseInt(sceneId)); 
+        		sceneBean = sceneService.selectById(Integer.parseInt(sceneId)); //查询情景是否存在
         		
-        		if(sceneBean.getSceneName() !=null && !sceneName.equals(sceneBean.getSceneName())){
+        		if(sceneBean != null && !sceneName.equals(sceneBean.getSceneName())){//如果存在,但名字不一样，则修改
         			doSceneJSONArray.getJSONObject(i).element("sceneName", sceneBean.getSceneName());        			
         		}
     		}
-    		jobDataMap.put("doScene", doSceneJSONArray);
+    		jobDataMap.put("doScene", doSceneJSONArray);*/
     		
     		/******************************************************/
     		
@@ -679,26 +677,5 @@ public class AppJobAction {
     
 		return ReturnBean.ReturnBeanToString("succeed", "删除任务成功", null);    	
     }
-    
-    @RequestMapping(value="deleteJobByGateway",method=RequestMethod.POST)
-    public @ResponseBody String deleteJobByGateway(HttpServletRequest request){ 
-    	ServletContext servletContext = request.getServletContext();     	        	      
-    	quartzService.quartzServiceImpl(servletContext);
-    	
-    	String repuestStr = CommonUtils.reqtoString(request);    	
-    	JSONObject jsonRequest = JSONObject.fromObject(repuestStr);
-    	String idFamily = jsonRequest.getString("idFamily");
-    	String idGateway = jsonRequest.getString("gatewayId");
-    	
-    	List<JobInfo> jobList= quartzService.getJobsByGroupName(idFamily);
-    	Iterator<JobInfo> iterator = jobList.iterator();
-    	String jobName = null;
-    	JobDataMap jobDataMap = null;
-    	while(iterator.hasNext()){
-    		jobName = iterator.next().getJobName();
-    		jobDataMap = quartzService.getJobDataMap(jobName, idFamily);
-    	}
-    	
-    	return "";
-    } 
+        
 }

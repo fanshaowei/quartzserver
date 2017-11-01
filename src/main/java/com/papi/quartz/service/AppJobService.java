@@ -16,4 +16,6 @@ public interface AppJobService {
 	public String updateDailySceneControlJob(ServletContext servletContext, AppRequestJobInfo appRequestJobInfo);
 	
 	public void importRedisData(ServletContext servletContext,String requestStr);
+	
+	public String deleteRedisAndScheduleJob(String idFamily, String idGateway);
 }
