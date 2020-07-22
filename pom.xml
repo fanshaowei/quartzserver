@@ -8,7 +8,7 @@
   <name>quartzserver Maven Webapp</name>
   <properties>
       <springframework.version>4.2.3.RELEASE</springframework.version>
-      <quartz.version>2.2.3</quartz.version>
+      <quartz.version>2.3.2</quartz.version>
       <mybatis.version>3.3.0</mybatis.version>
   </properties>
   <url>http://maven.apache.org</url>
